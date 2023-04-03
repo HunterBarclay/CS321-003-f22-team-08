@@ -1,11 +1,11 @@
-# Team Name
+# The SUPER UBER DUBER AWESOME team
 
 # Team Members
 
 Last Name       | First Name      | GitHub User Name
 --------------- | --------------- | --------------------
-TBD             | TBD             | TBD
-TBD             | TBD             | TBD
+Barclay         | Hunter          | KyroVibe
+Pierce          | Tyler           | tylerpierce683
 TBD             | TBD             | TBD
 
 # Test Results

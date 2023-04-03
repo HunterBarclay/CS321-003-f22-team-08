@@ -5,7 +5,7 @@
 Last Name       | First Name      | GitHub User Name
 --------------- | --------------- | --------------------
 Barclay         | Hunter          | KyroVibe
-TBD             | TBD             | TBD
+Pierce          | Tyler           | tylerpierce683
 TBD             | TBD             | TBD
 
 # Test Results

@@ -14,6 +14,8 @@ public class BTreeTest
     @Test
     public void btreeDegree4Test()
     {
+        BTree tree = new BTree<Long>("TODO");
+
 //        //TODO instantiate and populate a bTree object
 //        int expectedNumberOfNodes = TBD;
 //

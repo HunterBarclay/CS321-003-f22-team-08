@@ -1,11 +1,15 @@
 package cs321.btree;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.FileNotFoundException;
+
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+public class BTreeTest {
 
-public class BTreeTest
-{
     // HINT:
     //  instead of checking all intermediate states of constructing a tree
     //  you can check the final state of the tree and
@@ -14,7 +18,7 @@ public class BTreeTest
     @Test
     public void btreeDegree4Test()
     {
-        BTree tree = new BTree<Long>("TODO");
+        // BTree tree = new BTree<Long>("TODO");
 
 //        //TODO instantiate and populate a bTree object
 //        int expectedNumberOfNodes = TBD;
@@ -36,6 +40,32 @@ public class BTreeTest
 //            // second child of root has indexNode=2, and so on.
 //            assertEquals(expectedNodesContent[indexNode], bTree.getArrayOfNodeContentsForNodeIndex(indexNode).toString());
 //        }
+    }
+
+    @Test
+    public void btreeLoadTest() {
+        {
+            new BTree<Long>("/tmp/btree-load-test", 5);
+        }
+
+        try {
+            BTree<Long> tree = BTree.loadBTree("/tmp/btree-load-test");
+            assertEquals(5, tree.getDegree());
+        } catch (Exception e) {
+            fail("Encountered Exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeLoadFileNotFoundTest() {
+        try {
+            BTree<Long> tree = BTree.loadBTree("/tmp/dont-exist-tree");
+            fail("No exception encountered");
+        } catch (FileNotFoundException fnfe) {
+            assertTrue(true);
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
     }
 
 }

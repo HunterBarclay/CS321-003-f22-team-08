@@ -1,6 +1,8 @@
 package cs321.btree;
 
-public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObject<E>> {
+import java.io.Serializable;
+
+public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObject<E>>, Serializable {
 
     private int instances;
     private E key;

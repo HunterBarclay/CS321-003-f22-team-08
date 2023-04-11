@@ -26,10 +26,11 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     private static final String NODE_FILE_EXTENSION = ".node";
 
     private int maxFilesPerDirectory = 1000;
-    private long nextGuid = 0; // Only use positives
-    private long rootGuid;
+    private long nextGuid = 1; // Only use positives
+    private BTreeNode rootNode;
     private String treeDirectory;
     private int degree;
+    private int size;
 
     public BTree(String treeDirectory, int degree) {
         // Will always create a new BTree with constructor
@@ -43,24 +44,11 @@ public class BTree<E extends Comparable<E>> implements Serializable {
 
         this.treeDirectory = treeDirectory;
         this.degree = degree;
+        this.size = 0;
 
-        rootGuid = allocateNode();
-        if (rootGuid == -1) {
-            throw new RuntimeException();
-        }
+        rootNode = new BTreeNode(0, degree);
 
-        File treeFile = new File(String.format("%s/%s", treeDirectory, META_FILE_NAME));
-        try {
-            treeFile.createNewFile();
-            FileOutputStream fos = new FileOutputStream(treeFile);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(this);
-            oos.flush();
-            oos.close();
-            fos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        updateMetaFile();
     }
 
     @SuppressWarnings("unchecked")
@@ -164,6 +152,24 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         }
 
         return true;
+    }
+
+    /**
+     * Update the main meta file to store the new core data such as the root node, size, etc.
+     */
+    private void updateMetaFile() {
+        File treeFile = new File(String.format("%s/%s", treeDirectory, META_FILE_NAME));
+        try {
+            treeFile.createNewFile();
+            FileOutputStream fos = new FileOutputStream(treeFile);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+            oos.flush();
+            oos.close();
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private File getNodeFile(long guid) {

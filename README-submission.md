@@ -6,7 +6,7 @@ Last Name       | First Name      | GitHub User Name
 --------------- | --------------- | --------------------
 Barclay         | Hunter          | KyroVibe
 Pierce          | Tyler           | tylerpierce683
-Pfeil           | joshua          | joshuapfeil
+Pfeil           | Joshua          | joshuapfeil
 
 # Test Results
 How many of the dumpfiles matched (using the check-dumpfiles.sh script)?

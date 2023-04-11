@@ -8,6 +8,9 @@ import java.io.FileNotFoundException;
 
 import org.junit.Test;
 
+/**
+ * For getting temp folder: https://mkyong.com/java/how-to-get-the-temporary-file-path-in-java/
+ */
 public class BTreeTest {
 
     // HINT:
@@ -44,22 +47,26 @@ public class BTreeTest {
 
     @Test
     public void btreeLoadTest() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-load-test";
+
         {
-            new BTree<Long>("/tmp/btree-load-test", 5);
+            new BTree<Long>(location, 5);
         }
 
         try {
-            BTree<Long> tree = BTree.loadBTree("/tmp/btree-load-test");
+            BTree<Long> tree = BTree.loadBTree(location);
             assertEquals(5, tree.getDegree());
         } catch (Exception e) {
             fail("Encountered Exception: " + e.getMessage());
         }
     }
 
+    @SuppressWarnings("unused")
     @Test
     public void btreeLoadFileNotFoundTest() {
         try {
-            BTree<Long> tree = BTree.loadBTree("/tmp/dont-exist-tree");
+            BTree<Long> tmp = BTree.loadBTree("doesnt-exist-tree");
             fail("No exception encountered");
         } catch (FileNotFoundException fnfe) {
             assertTrue(true);

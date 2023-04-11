@@ -4,15 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -35,7 +31,9 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         // Will always create a new BTree with constructor
 
         try {
-            deleteDirectoryRecursive(Paths.get(treeDirectory));
+            if (Files.exists(Paths.get(treeDirectory)))
+                deleteDirectoryRecursive(Paths.get(treeDirectory));
+            
             Files.createDirectory(Paths.get(treeDirectory));
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,7 +156,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
             oos.close();
             fos.close();
 
-            System.out.println(String.format("[%s] -> %d bytes", f.getAbsolutePath(), f.length()));
+            // System.out.println(String.format("[%s] -> %d bytes", f.getAbsolutePath(), f.length()));
         } catch (Exception e) {
             return false;
         }

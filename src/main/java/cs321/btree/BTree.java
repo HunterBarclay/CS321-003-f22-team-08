@@ -16,6 +16,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Stack;
 
 /**
  * TODO
@@ -558,5 +559,76 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                 }
             }    
         } 
+    }
+
+    public Iterator<TreeObject<E>> iterator() {
+        return new BTreeIterator();
+    }
+
+    private class BTreeIterator implements Iterator<TreeObject<E>> {
+
+        public Stack<PathStep> currentPath;
+        public BTreeNode currentNode;
+        // public boolean traverseNext;
+        public int currentNodeIndex;
+
+        public BTreeIterator() {
+            currentPath = new Stack<PathStep>();
+
+            BTreeNode cursor = readDisk(rootGuid);
+            while (!cursor.isLeaf()) {
+                currentPath.add(new PathStep(cursor, 0));
+                cursor = readDisk(cursor.children[0]);
+            }
+
+            currentNode = cursor;
+            // traverseNext = false;
+            currentNodeIndex = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !(currentPath.empty() && currentNodeIndex >= currentNode.numKeys);
+        }
+
+        @Override
+        public TreeObject<E> next() {
+
+            if (!hasNext())
+                throw new RuntimeException("Nothing new");
+
+            TreeObject<E> returnValue;
+
+            if (currentNode.isLeaf()) {
+                returnValue = currentNode.keys[currentNodeIndex];
+                currentNodeIndex++;
+                while (currentNodeIndex >= currentNode.numKeys && currentPath.size() > 0) {
+                    PathStep step = currentPath.pop();
+                    currentNode = step.node;
+                    currentNodeIndex = step.lastVisitedChild;
+                }
+            } else {
+                returnValue = currentNode.keys[currentNodeIndex];
+                currentNodeIndex++;
+                while (!currentNode.isLeaf()) {
+                    currentPath.add(new PathStep(currentNode, currentNodeIndex));
+                    currentNode = readDisk(currentNode.children[currentNodeIndex]);
+                    currentNodeIndex = 0;
+                }
+            }
+
+            return new TreeObject<E>(returnValue);
+        }
+
+        private class PathStep {
+            public BTreeNode node;
+            public int lastVisitedChild;
+
+            public PathStep(BTreeNode node, int lastVisitedChild) {
+                this.node = node;
+                this.lastVisitedChild = lastVisitedChild;
+            }
+        }
+
     }
 }

@@ -1,15 +1,27 @@
 package cs321.create;
 
 import cs321.btree.BTree;
+import cs321.btree.TreeObject;
 import cs321.common.ParseArgumentException;
 import cs321.common.GeneBankParser;
 
 import java.util.Scanner;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Iterator;
+import java.util.List;
 
+public class GeneBankCreateBTree {
 
-public class GeneBankCreateBTree
-{
+    private final static String LINE_SEPARATOR = "==============================";
+    
+    private static GeneBankCreateBTreeArguments geneBankCreateBTreeArguments = null;
 
     public static void main(String[] args) throws Exception
     {
@@ -41,6 +53,85 @@ public class GeneBankCreateBTree
         }
         
         System.err.println("Have a great day! The great power of this tree brings great responsibility...");
+    }
+
+    public static Connection makeDatabaseConnection() {
+        // See: https://www.sqlitetutorial.net/sqlite-java/create-database/
+        Connection connection = null;
+        try {
+            if (!Files.exists(Paths.get("databases")))
+                Files.createDirectories(Paths.get("databases/"));
+            connection = DriverManager.getConnection("jdbc:sqlite:databases/my-btree.db");
+            if (connection == null)
+                throw new RuntimeException("Failed to create database");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return connection;
+    }
+
+    /**
+     * Writes data to a database using provided connection
+     * 
+     * Used SQLite example provided in the original project to help with the boiler plate
+     * 
+     * @param tree Tree to source data from
+     * @param connection Connection to SQL database
+     * @throws SQLException If theres an sql exception (IDK what kinds there are)
+     */
+    public static void writeToDatabase(BTree<Long> tree, Connection connection) throws SQLException {
+        writeToDatabase(tree, connection, geneBankCreateBTreeArguments.getSubsequenceLength());
+    }
+
+    /**
+     * Writes data to a database using provided connection
+     * 
+     * Used SQLite example provided in the original project to help with the boiler plate
+     * 
+     * @param tree Tree to source data from
+     * @param connection Connection to SQL database
+     * @param subsequenceLength Length of the sequences in the tree. Used for testing
+     * @throws SQLException If theres an sql exception (IDK what kinds there are)
+     */
+    public static void writeToDatabase(BTree<Long> tree, Connection connection, int subsequenceLength) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.setQueryTimeout(30);
+        statement.executeUpdate("DROP TABLE IF EXISTS subsequences;");
+        statement.executeUpdate(
+            "CREATE TABLE subsequences (" +
+            "key VARCHAR(31) UNIQUE NOT NULL PRIMARY KEY, " +
+            "instances INT DEFAULT 0" +
+            ");"
+        );
+
+        Iterator<TreeObject<Long>> iter = tree.iterator();
+        while (iter.hasNext()) {
+            TreeObject<Long> object = iter.next();
+            statement.executeUpdate(String.format(
+                "INSERT INTO subsequences VALUES ('%s', %d);",
+                SequenceUtils.longToDnaString(object.getKey(), subsequenceLength),
+                object.getInstances()
+            ));
+        }
+
+        statement.close();
+    }
+
+    /**
+     * Prints the Database for debugging purposes
+     * @param connection Connection to the SQL database
+     * @throws SQLException If theres an sql exception (IDK what kinds there are)
+     */
+    public static void printDatabase(Connection connection) throws SQLException {
+        Statement statement = connection.createStatement();
+        ResultSet results = statement.executeQuery("SELECT * FROM subsequences;");
+        System.out.println("Subsequences | Instances");
+        System.out.println(LINE_SEPARATOR);
+        while (results.next()) {
+            System.out.println(String.format("%s | %s", results.getString(1), results.getInt(2)));
+        }
+        statement.close();
+        System.out.println(LINE_SEPARATOR);
     }
 
     /**

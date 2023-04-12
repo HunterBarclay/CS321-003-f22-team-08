@@ -120,4 +120,23 @@ public class SequenceUtilsTest {
             fail("Encountered Exception: " + e.getMessage());
         }
     }
+    
+    @Test
+    public void geneBankParserIteratorHasNextTest() {
+        GeneBankParser parser = null;
+        try {
+            parser = new GeneBankParser(31, "data/files_gbk/test0.gbk");
+        } catch (Exception e) { fail(e.getMessage()); }
+
+        while (parser.hasNext()) { parser.next(); }
+
+        try {
+            parser.next();
+            fail("No exception encountered");
+        } catch (RuntimeException re) {
+            assertTrue(true);
+        } catch (Exception e) {
+            fail("Unknown exception encountered: " + e.getMessage());
+        }
+    }
 }

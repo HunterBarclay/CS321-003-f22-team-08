@@ -140,6 +140,9 @@ public class GeneBankParser implements Iterator<String> {
     @Override
     public String next() {
 
+        if (!hasNext())
+            throw new RuntimeException("Nothing new");
+
         // We are going to have the next sequence stored preemptively to make it so hasNext works
         String result = subsequence.toString();
 

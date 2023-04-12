@@ -12,6 +12,11 @@ public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObjec
         instances = 1;
     }
 
+    public TreeObject(TreeObject<E> original) {
+        instances = original.instances;
+        key = original.key;
+    }
+
     public int getInstances() {
         return instances;
     }

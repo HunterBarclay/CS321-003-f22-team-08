@@ -2,11 +2,19 @@ package cs321.create;
 
 import cs321.Utils;
 import cs321.common.GeneBankParser;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidParameterException;
 
 public class SequenceUtilsTest {
@@ -88,6 +96,28 @@ public class SequenceUtilsTest {
             assert(true);
         } catch (Exception e) {
             fail(String.format("Unknown exception encountered: %s", e.getMessage()));
+        }
+    }
+
+    @Ignore("Comment this line out if you have the file downloaded")
+    @Test
+    public void parseYChromosomeTest() {
+        Path yChromosome = Paths.get("data/files_gbk/hs_ref_chrY.gbk");
+        if (!Files.exists(yChromosome)) {
+            fail("GBK file doesn't exist");
+        }
+
+        try {
+            GeneBankParser parser = new GeneBankParser(31, yChromosome.toString());
+            long count = 0;
+            while (parser.hasNext()) {
+                parser.next();
+                count++;
+            }
+            System.out.println("Number of Subsequences: " + count);
+            assertTrue(true);
+        } catch (Exception e) {
+            fail("Encountered Exception: " + e.getMessage());
         }
     }
 }

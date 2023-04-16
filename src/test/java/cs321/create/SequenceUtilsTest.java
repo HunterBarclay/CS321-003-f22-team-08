@@ -114,13 +114,14 @@ public class SequenceUtilsTest {
                 parser.next();
                 count++;
             }
-            System.out.println("Number of Subsequences: " + count);
+
+            System.out.println(String.format("\t===== Found %d Subsequences in \"hs_ref_chrY.gbk\" =====", count));
             assertTrue(true);
         } catch (Exception e) {
             fail("Encountered Exception: " + e.getMessage());
         }
     }
-    
+
     @Test
     public void geneBankParserIteratorHasNextTest() {
         GeneBankParser parser = null;

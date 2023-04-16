@@ -124,8 +124,21 @@ public class BTree<E extends Comparable<E>> implements Serializable {
      * @param element Key to find
      * @return TreeObject at given key
      */
-    public TreeObject<E> search(E key) {
-        throw new RuntimeException();
+    @SuppressWarnings("unchecked")
+    public TreeObject<E> search(BTreeNode node, E key) {
+        int i = 0;
+        while (i < node.getNumKeys() && key.compareTo((E)node.getKey(i)) > 0) {
+            i++;
+        }
+        if (i < node.getNumKeys() && key.compareTo((E)node.getKey(i)) == 0) {
+            return node.getKey(i);
+        }
+        else if (node.children.length == 0) {
+            return null;
+        }
+        else {
+            return search(readDisk(node.children[i]), key);
+        }
     }
 
     /**

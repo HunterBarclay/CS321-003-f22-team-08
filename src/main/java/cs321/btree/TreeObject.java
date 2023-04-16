@@ -20,6 +20,10 @@ public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObjec
         instances++;
     }
 
+    public void setInstances(int numInstances) {
+        this.instances = numInstances;
+    }
+
     public E getKey() {
         return key;
     }

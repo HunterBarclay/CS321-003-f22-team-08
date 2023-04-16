@@ -120,18 +120,46 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     }
 
     /**
-     * Searchs and returns found TreeObject given key
-     * @param element Key to find
-     * @return TreeObject at given key
+     * Searches the BTree for a matching key and returns the TreeObject 
+     * that contains that given key if found
+     * @param key Key to find
+     * @return TreeObject containing key
      */
-    @SuppressWarnings("unchecked")
-    public TreeObject<E> search(BTreeNode node, E key) {
+    public TreeObject<E> search(E key) {
         int i = 0;
-        while (i < node.getNumKeys() && key.compareTo((E)node.getKey(i)) > 0) {
+        BTreeNode rootNode = readDisk(rootGuid);
+        while (i < rootNode.getNumKeys() && key.compareTo(rootNode.getKey(i).getKey()) > 0) {
             i++;
         }
-        if (i < node.getNumKeys() && key.compareTo((E)node.getKey(i)) == 0) {
-            return node.getKey(i);
+        if (i < rootNode.getNumKeys() && key.compareTo(rootNode.getKey(i).getKey()) == 0) {
+            TreeObject<E> copyTreeObject = new TreeObject<E>(key);
+            copyTreeObject.setInstances(rootNode.getKey(i).getInstances());
+            return copyTreeObject;
+        }
+        else if (rootNode.children.length == 0) {
+            return null;
+        }
+        else {
+            return search(readDisk(rootNode.children[i]), key);
+        }
+    }
+
+    /**
+     * Private helper method that searches and returns found TreeObject 
+     * given a node and a key
+     * @param node the node to be searched in
+     * @param key Key to find
+     * @return TreeObject at given key
+     */
+    private TreeObject<E> search(BTreeNode node, E key) {
+        int i = 0;
+        while (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) > 0) {
+            i++;
+        }
+        if (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) == 0) {
+            TreeObject<E> copyTreeObject = new TreeObject<E>(key);
+            copyTreeObject.setInstances(node.getKey(i).getInstances());
+            return copyTreeObject;
         }
         else if (node.children.length == 0) {
             return null;

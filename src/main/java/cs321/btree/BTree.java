@@ -56,26 +56,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         
 
         File treeFile = new File(String.format("%s/%s", treeDirectory, META_FILE_NAME));
-        try {
-            treeFile.createNewFile();
-            FileOutputStream fos = new FileOutputStream(treeFile);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(this);
-            BTreeNode tree = new BTreeNode(10,1000);
-            for(long l:tree.children) {
-            	l = 9;
-            }
-            for(int i = 0; i<999; i++) {
-            	tree.keys[i] = (TreeObject<E>) new TreeObject<Long>(100000l);
-            	System.out.println((long)tree.keys[i].getKey());
-            }
-            oos.writeObject(tree);
-            oos.flush();
-            oos.close();
-            fos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        updateMetaFile();
     }
 
     @SuppressWarnings("unchecked")
@@ -212,6 +193,24 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         }
 
         return true;
+    }
+    
+    /**
+     * Update the main meta file to store the new core data such as the root node, size, etc.
+     */
+    private void updateMetaFile() {
+        File treeFile = new File(String.format("%s/%s", treeDirectory, META_FILE_NAME));
+        try {
+            treeFile.createNewFile();
+            FileOutputStream fos = new FileOutputStream(treeFile);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+            oos.flush();
+            oos.close();
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private File getNodeFile(long guid) {

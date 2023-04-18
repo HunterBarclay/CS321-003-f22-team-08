@@ -4,13 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.util.Scanner;
 
 import org.junit.Test;
 
-/**
- * For getting temp folder: https://mkyong.com/java/how-to-get-the-temporary-file-path-in-java/
- */
 public class BTreeTest {
 
     // HINT:
@@ -47,26 +48,22 @@ public class BTreeTest {
 
     @Test
     public void btreeLoadTest() {
-
-        String location = System.getProperty("java.io.tmpdir") + "/btree-load-test";
-
         {
-            new BTree<Long>(location, 5);
+            new BTree<Long>("/tmp/btree-load-test", 5);
         }
 
         try {
-            BTree<Long> tree = BTree.loadBTree(location);
+            BTree<Long> tree = BTree.loadBTree("/tmp/btree-load-test");
             assertEquals(5, tree.getDegree());
         } catch (Exception e) {
             fail("Encountered Exception: " + e.getMessage());
         }
     }
 
-    @SuppressWarnings("unused")
     @Test
     public void btreeLoadFileNotFoundTest() {
         try {
-            BTree<Long> tmp = BTree.loadBTree("doesnt-exist-tree");
+            BTree<Long> tree = BTree.loadBTree("/tmp/dont-exist-tree");
             fail("No exception encountered");
         } catch (FileNotFoundException fnfe) {
             assertTrue(true);
@@ -74,5 +71,82 @@ public class BTreeTest {
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
+    
+    @Test
+    public void btreeEmptyDeg4TreeInsertAgetNumKeys1andgetNumNodes1() {
+    	try {
+            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            tree.insert((long)'A');
+            if(tree.getNumKeys() != 1) {
+            	fail("Number of keys was not increased correctly");
+            }
+            if(tree.getNumNodes() != 1) {
+            	fail("Number of nodes was not increased correctly");
+            }
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+    @Test
+    public void btreeEmptyDeg4TreeInsertALoadTreeNoException() {
+    	try {
+            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            tree.insert((long)'A');
+            tree = BTree.<Long>loadBTree("temp-BTree");
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+    
+    @Test
+    public void btreeEmptyDeg4TreeInsertABCDgetNumKeys4andgetNumNodes3() {
+    	try {
+            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            tree.insert((long)'A');
+            tree.insert((long)'B');
+            tree.insert((long)'C');
+            tree.insert((long)'D');
+            if(tree.getNumKeys() != 4) {
+            	fail("Number of keys was not increased correctly");
+            }
+            if(tree.getNumNodes() != 3) {
+            	fail("Number of nodes was not increased correctly");
+            }
+        } catch (Exception e) {
+        	e.printStackTrace();
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+    @Test
+    public void btreeEmptyDeg4TreeInsertABCDEFGHIJKLMNOPgetNumKeys16andgetNumNodes12() {
+    	try {
+            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            tree.insert((long)'A');
+            tree.insert((long)'B');
+            tree.insert((long)'C');
+            tree.insert((long)'D');
+            tree.insert((long)'E');
+            tree.insert((long)'F');
+            tree.insert((long)'G');
+            tree.insert((long)'H');
+            tree.insert((long)'I');
+            tree.insert((long)'J');
+            tree.insert((long)'K');
+            tree.insert((long)'L');
+            tree.insert((long)'M');
+            tree.insert((long)'N');
+            tree.insert((long)'O');
+            tree.insert((long)'P');
+            if(tree.getNumKeys() != 16) {
+            	fail("Number of keys was not increased correctly");
+            }
+            if(tree.getNumNodes() != 12) {
+            	fail("Number of nodes was not increased correctly");
+            }
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+   
 
 }

@@ -4,6 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+<<<<<<< HEAD
+=======
+import java.io.File;
+import java.beans.Transient;
+>>>>>>> fd4696b (Added skeleton test for search)
 import java.io.FileNotFoundException;
 
 import org.junit.Test;
@@ -202,6 +207,12 @@ public class BTreeTest {
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
+    }
+
+    @Test
+    public void btreeSearch() {
+        //TODO: Add test condition
+        assertTrue(false);
     }
 
 }

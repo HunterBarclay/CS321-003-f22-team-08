@@ -4,21 +4,29 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
-import java.util.Scanner;
 
 import org.junit.Test;
 
 public class BTreeTest {
 
-    // HINT:
-    //  instead of checking all intermediate states of constructing a tree
-    //  you can check the final state of the tree and
-    //  assert that the constructed tree has the expected number of nodes and
-    //  assert that some (or all) of the nodes have the expected values
+    private static final Long A =  0l;
+    private static final Long B =  1l;
+    private static final Long C =  2l;
+    private static final Long D =  3l;
+    private static final Long E =  4l;
+    private static final Long F =  5l;
+    private static final Long G =  6l;
+    private static final Long H =  7l;
+    private static final Long I =  8l;
+    private static final Long J =  9l;
+    private static final Long K = 10l;
+    private static final Long L = 11l;
+    private static final Long M = 12l;
+    private static final Long N = 13l;
+    private static final Long O = 14l;
+    private static final Long P = 15l;
+
     @Test
     public void btreeDegree4Test()
     {
@@ -76,13 +84,13 @@ public class BTreeTest {
     }
     
     @Test
-    public void btreeEmptyDeg4TreeInsertAgetNumKeys1andgetNumNodes1() {
+    public void btreeDegree4Empty_insertA() {
 
         String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insert1-test";
 
     	try {
             BTree<Long> tree = new BTree<Long>(location, 4);
-            tree.insert((long)'A');
+            tree.insert(A);
             if(tree.getNumKeys() != 1) {
             	fail("Number of keys was not increased correctly");
             }
@@ -94,74 +102,106 @@ public class BTreeTest {
         }
     }
     @Test
-    public void btreeEmptyDeg4TreeInsertALoadTreeNoException() {
+    public void btreeDegree4A_load() {
 
         String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insert1-load-test";
 
-    	try {
+        {
             BTree<Long> tree = new BTree<Long>(location, 4);
-            tree.insert((long)'A');
-            tree = BTree.<Long>loadBTree(location);
+            tree.insert(A);
+        }
+
+    	try {
+            BTree<Long> loadedTree = BTree.<Long>loadBTree(location);
+            assertEquals(1, loadedTree.getNumKeys());
+            assertEquals(1, loadedTree.getNumNodes());
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
     
     @Test
-    public void btreeEmptyDeg4TreeInsertABCDgetNumKeys4andgetNumNodes3() {
+    public void btreeDegree4_insertABCD() {
 
         String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insert4-test";
 
     	try {
             BTree<Long> tree = new BTree<Long>(location, 4);
-            tree.insert((long)'A');
-            tree.insert((long)'B');
-            tree.insert((long)'C');
-            tree.insert((long)'D');
-            if(tree.getNumKeys() != 4) {
-            	fail("Number of keys was not increased correctly");
-            }
-            if(tree.getNumNodes() != 3) {
-            	fail("Number of nodes was not increased correctly");
-            }
+            tree.insert(A);
+            tree.insert(B);
+            tree.insert(C);
+            tree.insert(D);
+            assertEquals(4, tree.getNumKeys());
+            assertEquals(3, tree.getNumNodes());
         } catch (Exception e) {
         	e.printStackTrace();
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
     @Test
-    public void btreeEmptyDeg4TreeInsertABCDEFGHIJKLMNOPgetNumKeys16andgetNumNodes12() {
+    public void btreeDegree4_insertABCDEFGHIJKLMNOP() {
 
         String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
 
     	try {
             BTree<Long> tree = new BTree<Long>(location, 4);
-            tree.insert((long)'A');
-            tree.insert((long)'B');
-            tree.insert((long)'C');
-            tree.insert((long)'D');
-            tree.insert((long)'E');
-            tree.insert((long)'F');
-            tree.insert((long)'G');
-            tree.insert((long)'H');
-            tree.insert((long)'I');
-            tree.insert((long)'J');
-            tree.insert((long)'K');
-            tree.insert((long)'L');
-            tree.insert((long)'M');
-            tree.insert((long)'N');
-            tree.insert((long)'O');
-            tree.insert((long)'P');
-            if(tree.getNumKeys() != 16) {
-            	fail("Number of keys was not increased correctly");
-            }
-            if(tree.getNumNodes() != 12) {
-            	fail("Number of nodes was not increased correctly");
-            }
+            tree.insert(A);
+            tree.insert(B);
+            tree.insert(C);
+            tree.insert(D);
+            tree.insert(E);
+            tree.insert(F);
+            tree.insert(G);
+            tree.insert(H);
+            tree.insert(I);
+            tree.insert(J);
+            tree.insert(K);
+            tree.insert(L);
+            tree.insert(M);
+            tree.insert(N);
+            tree.insert(O);
+            tree.insert(P);
+            assertEquals(16, tree.getNumKeys());
+            assertEquals(12, tree.getNumNodes());
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
-   
+
+    @Test
+    public void btreeDegree3_insertAAB() {
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertAAB-test";
+
+        try {
+            BTree<Long> tree = new BTree<>(location, 3);
+            tree.insert(A);
+            tree.insert(A);
+            tree.insert(B);
+
+            assertEquals(2, tree.getNumKeys());
+            assertEquals(1, tree.getNumNodes());
+
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDegree2_insertAx100() {
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertAAB-test";
+
+        try {
+            BTree<Long> tree = new BTree<>(location, 3);
+            for (int i = 0; i < 100; i++) {
+                tree.insert(A);
+            }
+
+            assertEquals(1, tree.getNumKeys());
+            assertEquals(1, tree.getNumNodes());
+
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
 
 }

@@ -37,9 +37,9 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         // Will always create a new BTree with constructor
 
         try {
-        	if(Paths.get(treeDirectory).toFile().exists()) {
-            	deleteDirectoryRecursive(Paths.get(treeDirectory));
-        	}
+            if (Paths.get(treeDirectory).toFile().exists()) {
+                deleteDirectoryRecursive(Paths.get(treeDirectory));
+            }
             Files.createDirectory(Paths.get(treeDirectory));
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,8 +54,6 @@ public class BTree<E extends Comparable<E>> implements Serializable {
             throw new RuntimeException();
         }
         
-
-        File treeFile = new File(String.format("%s/%s", treeDirectory, META_FILE_NAME));
         updateMetaFile();
     }
 
@@ -88,7 +86,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     	BTreeNode node = readDisk(rootGuid);
     	TreeObject<E> obj = new TreeObject<E>(key);
     	int i;
-    	while(!node.isLeaf()) {
+    	while (!node.isLeaf()) {
     		for(i = 0; i < node.getNumKeys(); i++) {
     			if(node.getKey(i).compareTo(obj) >= 0) {
     				break;
@@ -96,12 +94,13 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     		}
     		node = readDisk(node.getChild(i));
     	}
-    	if(node.isFull()) {
+    	if (node.isFull()) {
     		splitNode(node);
     	}
     	node.insert(obj);
     	numKeys++;
     	writeDisk(node);
+        updateMetaFile();
     }
     
     /**
@@ -252,21 +251,22 @@ public class BTree<E extends Comparable<E>> implements Serializable {
      */
     private BTreeNode splitNode(BTreeNode node) {
     	BTreeNode parentNode;
-    	if(node.getParent() == -1) {
+        // If node is the root
+    	if (node.getParent() == -1) {
     		node.setParent(allocateNode());
     	}
     	parentNode = readDisk(node.getParent());
     	int index = node.getNumKeys() / 2 + 1;
-    	if(parentNode.isFull()) {
+    	if (parentNode.isFull()) {
     		splitNode(parentNode);
     	}
     	parentNode.insert(node.getKey(index));
     	BTreeNode newNode = readDisk(allocateNode());
-    	for(int i = node.getNumKeys() / 2 + 2; i < node.getNumKeys(); i++) {
+    	for (int i = node.getNumKeys() / 2 + 2; i < node.getNumKeys(); i++) {
     		newNode.insert(node.getKey(i));
     		newNode.addChild(node.getChild(i));
     	}
-    	if(node.getNumChildren() != 0) {
+    	if (node.getNumChildren() != 0) {
     		newNode.addChild(node.getChild(node.getNumKeys()));
     	}
     	newNode.setParent(parentNode.getGuid());
@@ -364,14 +364,14 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          * @param object object to insert
          */
         public void insert(TreeObject<E> object) {
-        	if(!isFull()) {
+        	if (!isFull()) {
         		int i;
-        		for(i = 0; i < numKeys; i++) {
-        			if(getKey(i).compareTo(object) >= 0) {
+        		for (i = 0; i < numKeys; i++) {
+        			if (getKey(i).compareTo(object) >= 0) {
         				break;
         			}
         		}
-        		for(int j = i + 1; j < numKeys; j++) {
+        		for (int j = i + 1; j < numKeys; j++) {
         			keys[j] = keys[j - 1];
         		}
         		keys[i] = object;
@@ -385,14 +385,14 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          * @return true if successful
          */
         public boolean addChild(long nodeId) {
-        	if(isFull()) {
+        	if (isFull()) {
         		return false;
         	}
         	int i;
         	BTreeNode node = readDisk(nodeId);
-        	for(i = 0; i < getNumKeys(); i++) {
-        		if(node.getNumKeys() != 0) {
-	    			if(getKey(i).compareTo(node.getKey(0)) >= 0) {
+        	for (i = 0; i < getNumKeys(); i++) {
+        		if (node.getNumKeys() != 0) {
+	    			if (getKey(i).compareTo(node.getKey(0)) >= 0) {
 	    				break;
 	    			}
         		}
@@ -430,7 +430,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          * @return true if the node has no children
          */
         public boolean isLeaf() {
-        	if(numChildren == 0) {
+        	if (numChildren == 0) {
         		return true;
         	}
         	return false;

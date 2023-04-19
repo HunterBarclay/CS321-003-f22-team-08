@@ -48,12 +48,15 @@ public class BTreeTest {
 
     @Test
     public void btreeLoadTest() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-load-test";
+
         {
-            new BTree<Long>("/tmp/btree-load-test", 5);
+            new BTree<Long>(location, 5);
         }
 
         try {
-            BTree<Long> tree = BTree.loadBTree("/tmp/btree-load-test");
+            BTree<Long> tree = BTree.loadBTree(location);
             assertEquals(5, tree.getDegree());
         } catch (Exception e) {
             fail("Encountered Exception: " + e.getMessage());
@@ -63,7 +66,7 @@ public class BTreeTest {
     @Test
     public void btreeLoadFileNotFoundTest() {
         try {
-            BTree<Long> tree = BTree.loadBTree("/tmp/dont-exist-tree");
+            BTree<Long> tree = BTree.loadBTree("doesnt-exist-tree");
             fail("No exception encountered");
         } catch (FileNotFoundException fnfe) {
             assertTrue(true);
@@ -74,8 +77,11 @@ public class BTreeTest {
     
     @Test
     public void btreeEmptyDeg4TreeInsertAgetNumKeys1andgetNumNodes1() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insert1-test";
+
     	try {
-            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            BTree<Long> tree = new BTree<Long>(location, 4);
             tree.insert((long)'A');
             if(tree.getNumKeys() != 1) {
             	fail("Number of keys was not increased correctly");
@@ -89,10 +95,13 @@ public class BTreeTest {
     }
     @Test
     public void btreeEmptyDeg4TreeInsertALoadTreeNoException() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insert1-load-test";
+
     	try {
-            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            BTree<Long> tree = new BTree<Long>(location, 4);
             tree.insert((long)'A');
-            tree = BTree.<Long>loadBTree("temp-BTree");
+            tree = BTree.<Long>loadBTree(location);
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
@@ -100,8 +109,11 @@ public class BTreeTest {
     
     @Test
     public void btreeEmptyDeg4TreeInsertABCDgetNumKeys4andgetNumNodes3() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insert4-test";
+
     	try {
-            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            BTree<Long> tree = new BTree<Long>(location, 4);
             tree.insert((long)'A');
             tree.insert((long)'B');
             tree.insert((long)'C');
@@ -119,8 +131,11 @@ public class BTreeTest {
     }
     @Test
     public void btreeEmptyDeg4TreeInsertABCDEFGHIJKLMNOPgetNumKeys16andgetNumNodes12() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
+
     	try {
-            BTree<Long> tree = new BTree<Long>("temp-BTree", 4);
+            BTree<Long> tree = new BTree<Long>(location, 4);
             tree.insert((long)'A');
             tree.insert((long)'B');
             tree.insert((long)'C');

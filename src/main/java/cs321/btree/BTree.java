@@ -97,8 +97,8 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     	if (node.isFull()) {
     		splitNode(node);
     	}
-    	node.insert(obj);
-    	numKeys++;
+        if (node.insert(obj))
+    	    numKeys++;
     	writeDisk(node);
         updateMetaFile();
     }
@@ -362,21 +362,28 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         /**
          * inserts the given object into the node
          * @param object object to insert
+         * @return True if a new key was added, false if not. False could indicate either the node was full or they key already existed
          */
-        public void insert(TreeObject<E> object) {
+        public boolean insert(TreeObject<E> object) {
         	if (!isFull()) {
-        		int i;
-        		for (i = 0; i < numKeys; i++) {
-        			if (getKey(i).compareTo(object) >= 0) {
-        				break;
-        			}
-        		}
-        		for (int j = i + 1; j < numKeys; j++) {
-        			keys[j] = keys[j - 1];
-        		}
-        		keys[i] = object;
-        		numKeys++;
+        		int i = 0;
+                while (i < numKeys && getKey(i).compareTo(object) < 0) {
+                    i++;
+                }
+                if (i < numKeys && getKey(i).compareTo(object) == 0) {
+                    keys[i].incrementInstances();
+                    return false;
+                } else {
+                    for (int j = i + 1; j < numKeys; j++) {
+                        keys[j] = keys[j - 1];
+                    }
+                    keys[i] = object;
+        		    numKeys++;
+                    return true;
+                }
         	}
+
+            return false;
         }
 
         /**

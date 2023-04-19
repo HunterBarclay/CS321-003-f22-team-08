@@ -16,6 +16,10 @@ public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObjec
         return instances;
     }
 
+    public void incrementInstances() {
+        instances++;
+    }
+
     public E getKey() {
         return key;
     }

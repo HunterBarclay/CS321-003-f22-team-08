@@ -187,7 +187,6 @@ public class BTree<E extends Comparable<E>> implements Serializable {
             oos.close();
             fos.close();
 
-            System.out.println(String.format("[%s] -> %d bytes", f.getAbsolutePath(), f.length()));
         } catch (Exception e) {
             return false;
         }

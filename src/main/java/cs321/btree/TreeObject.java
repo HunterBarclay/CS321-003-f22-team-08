@@ -29,4 +29,9 @@ public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObjec
         return key.compareTo(o.key);
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s [%d]", key.toString(), instances);
+    }
+
 }

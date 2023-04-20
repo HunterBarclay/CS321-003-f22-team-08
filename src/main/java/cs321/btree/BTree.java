@@ -282,6 +282,13 @@ public class BTree<E extends Comparable<E>> implements Serializable {
      * @return Degree of the tree
      */
     public int getDegree() { return degree; }
+
+    @Override
+    public String toString() {
+        StringBuilder  builder = new StringBuilder();
+        readDisk(rootGuid).toString(builder, 0);
+        return builder.toString();
+    }
     
     /**
      * Node in the BTree that stores TreeObjects
@@ -441,6 +448,28 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         		return true;
         	}
         	return false;
+        }
+
+        public void toString(StringBuilder builder, int depth) {
+            if (isLeaf()) {
+                for (int i = 0; i < numKeys; i++) {
+                    for (int j = 0; j < depth + 1; j++) {
+                        builder.append(" - ");
+                    }
+                    builder.append(keys[i].toString());
+                    builder.append("\n");
+                }
+            } else {
+                readDisk(children[0]).toString(builder, depth + 1);
+                for (int i = 0; i < numKeys; i++) {
+                    for (int j = 0; j < depth + 1; j++) {
+                        builder.append(" - ");
+                    }
+                    builder.append(keys[i].toString());
+                    builder.append("\n");
+                    readDisk(children[i + 1]).toString(builder, depth + 1);
+                }
+            }
         }
         
     }

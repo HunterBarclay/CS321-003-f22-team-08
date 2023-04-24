@@ -26,7 +26,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     private static final String NODE_FILE_EXTENSION = ".node";
 
     private int maxFilesPerDirectory = 1000;
-    private long nextGuid = 1; // Only use positives
+    private long nextGuid = 0; // Only use positives
     private long rootGuid;
     private String treeDirectory;
     private int degree;

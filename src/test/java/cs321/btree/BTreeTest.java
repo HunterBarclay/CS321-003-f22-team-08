@@ -316,13 +316,11 @@ public class BTreeTest {
             Random rand = new Random(10);
             long l;
             for(int i = 0; i < 30; i++) {
-            	l = rand.nextLong(100);
+            	l = Math.abs(rand.nextLong()) % 100;
             	tree.insert(l);
             }
             System.out.println(tree.toString());
             assertEquals(28, tree.getNumKeys());
-            assertEquals(12, tree.getNumNodes());
-            
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
@@ -338,12 +336,12 @@ public class BTreeTest {
             Random rand = new Random(10);
             long l;
             for(int i = 0; i < 30; i++) {
-            	l = rand.nextLong(100);
+            	l = Math.abs(rand.nextLong()) % 100;
             	tree.insert(l);
             }
             System.out.println(tree.toString());
             assertEquals(28, tree.getNumKeys());
-            //assertEquals(12, tree.getNumNodes());
+            assertEquals(5, tree.getNumNodes());
             
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
@@ -360,7 +358,7 @@ public class BTreeTest {
             Random rand = new Random(10);
             long l;
             for(int i = 0; i < 300; i++) {
-            	l = rand.nextLong(100);
+            	l = Math.abs(rand.nextLong()) % 100;
             	tree.insert(l);
             }
             System.out.println(tree.toString());

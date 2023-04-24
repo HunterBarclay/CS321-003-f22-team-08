@@ -4,11 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-<<<<<<< HEAD
-=======
-import java.io.File;
-import java.beans.Transient;
->>>>>>> fd4696b (Added skeleton test for search)
 import java.io.FileNotFoundException;
 
 import org.junit.Test;
@@ -76,6 +71,7 @@ public class BTreeTest {
         }
     }
 
+    @SuppressWarnings("unused")
     @Test
     public void btreeLoadFileNotFoundTest() {
         try {
@@ -193,7 +189,7 @@ public class BTreeTest {
 
     @Test
     public void btreeDegree2_insertAx100() {
-        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertAAB-test";
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertAx100-test";
 
         try {
             BTree<Long> tree = new BTree<>(location, 3);
@@ -210,9 +206,70 @@ public class BTreeTest {
     }
 
     @Test
-    public void btreeSearch() {
-        //TODO: Add test condition
-        assertTrue(false);
+    public void btreeDegree4_insertABCAAD_SearchNumInstancesA() {
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertABCAAD-search-test";
+
+    	try {
+            BTree<Long> tree = new BTree<>(location, 4);
+            tree.insert(A);
+            tree.insert(B);
+            tree.insert(C);
+            tree.insert(A);
+            tree.insert(A);
+            tree.insert(D);
+        
+            assertEquals(3, tree.search(A).getInstances());
+
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDegree4_insertABCDCBDEC_SearchNumInstancesABCDE() {
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertABCDCBDEC-search-test";
+
+    	try {
+            BTree<Long> tree = new BTree<>(location, 4);
+            tree.insert(A);
+            tree.insert(B);
+            tree.insert(C);
+            tree.insert(D);
+            tree.insert(C);
+            tree.insert(B);
+            tree.insert(D);
+            tree.insert(E);
+            tree.insert(C);
+        
+            assertEquals(1, tree.search(A).getInstances());
+            assertEquals(2, tree.search(B).getInstances());
+            assertEquals(3, tree.search(C).getInstances());
+            assertEquals(2, tree.search(D).getInstances());
+            assertEquals(1, tree.search(E).getInstances());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDegree3_insertAx50_SearchNumInstancesA() {
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertAx50-search-test";
+
+    	try {
+            BTree<Long> tree = new BTree<>(location, 3);
+            for (int i = 0; i < 50; i++) {
+                tree.insert(A);
+            }
+
+            assertEquals(1, tree.getNumKeys());
+            assertEquals(1, tree.getNumNodes());
+            assertEquals(50, tree.search(A).getInstances());
+
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
     }
 
 }

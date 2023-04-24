@@ -123,15 +123,27 @@ public class GeneBankCreateBTree {
      * @throws SQLException If theres an sql exception (IDK what kinds there are)
      */
     public static void printDatabase(Connection connection) throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet results = statement.executeQuery("SELECT * FROM subsequences;");
         System.out.println("Subsequences | Instances");
         System.out.println(LINE_SEPARATOR);
+        StringBuilder builder = new StringBuilder();
+        printDatabase(connection, builder);
+        System.out.print(builder.toString());
+        System.out.println(LINE_SEPARATOR);
+    }
+
+    /**
+     * Prints the Database for debugging purposes
+     * @param connection Connection to the SQL database
+     * @throws SQLException If theres an sql exception (IDK what kinds there are)
+     */
+    public static void printDatabase(Connection connection, StringBuilder builder) throws SQLException {
+        Statement statement = connection.createStatement();
+        ResultSet results = statement.executeQuery("SELECT * FROM subsequences;");
         while (results.next()) {
-            System.out.println(String.format("%s | %s", results.getString(1), results.getInt(2)));
+            builder.append(String.format("%s [%d]", results.getString(1), results.getInt(2)));
+            builder.append("\n");
         }
         statement.close();
-        System.out.println(LINE_SEPARATOR);
     }
 
     /**

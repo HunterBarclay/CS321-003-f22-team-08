@@ -368,4 +368,29 @@ public class BTreeTest {
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
+
+    @Test
+    public void btree_Insert1000_Load() {
+        String location = System.getProperty("java.io.tmpdir") + "/btree-insert1000-load-test";
+
+        String toStringContents;
+        {
+            BTree<Integer> btree = new BTree<Integer>(location, 5);
+
+            Random rand = new Random(420);
+            for (Integer i = 0; i < 1000; i++) {
+                btree.insert(rand.nextInt(700));
+            }
+
+            toStringContents = btree.toString();
+        }
+
+        try {
+            BTree<Integer> btree = BTree.<Integer>loadBTree(location);
+            assertEquals(toStringContents, btree.toString());
+        } catch (Exception e) {
+            fail("Exception encountered: " + e.getMessage());
+        }
+
+    }
 }

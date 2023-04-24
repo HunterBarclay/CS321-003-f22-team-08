@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.FileNotFoundException;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -91,6 +92,7 @@ public class BTreeTest {
     	try {
             BTree<Long> tree = new BTree<Long>(location, 4);
             tree.insert(A);
+            System.out.println(tree.toString());
             if(tree.getNumKeys() != 1) {
             	fail("Number of keys was not increased correctly");
             }
@@ -130,7 +132,9 @@ public class BTreeTest {
             tree.insert(A);
             tree.insert(B);
             tree.insert(C);
+            System.out.println(tree.toString());
             tree.insert(D);
+            System.out.println(tree.toString());
             assertEquals(4, tree.getNumKeys());
             assertEquals(3, tree.getNumNodes());
         } catch (Exception e) {
@@ -138,6 +142,7 @@ public class BTreeTest {
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
+
     @Test
     public void btreeDegree4_insertABCDEFGHIJKLMNOP() {
 
@@ -161,8 +166,104 @@ public class BTreeTest {
             tree.insert(N);
             tree.insert(O);
             tree.insert(P);
+            System.out.println(tree.toString());
             assertEquals(16, tree.getNumKeys());
             assertEquals(12, tree.getNumNodes());
+            
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDegree4_insertPONMLKJIHGFEDCBA() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
+
+    	try {
+            BTree<Long> tree = new BTree<Long>(location, 4);
+            tree.insert(P);
+            tree.insert(O);
+            tree.insert(N);
+            tree.insert(M);
+            tree.insert(L);
+            tree.insert(K);
+            tree.insert(J);
+            tree.insert(I);
+            tree.insert(H);
+            tree.insert(G);
+            tree.insert(F);
+            tree.insert(E);
+            tree.insert(D);
+            tree.insert(C);
+            tree.insert(B);
+            tree.insert(A);
+            assertEquals(16, tree.getNumKeys());
+            assertEquals(9, tree.getNumNodes());
+            System.out.println(tree.toString());
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDegree3_insertABCDEFGHIJKLMNOP() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
+
+    	try {
+            BTree<Long> tree = new BTree<Long>(location, 3);
+            tree.insert(A);
+            tree.insert(B);
+            tree.insert(C);
+            tree.insert(D);
+            tree.insert(E);
+            tree.insert(F);
+            tree.insert(G);
+            tree.insert(H);
+            tree.insert(I);
+            tree.insert(J);
+            tree.insert(K);
+            tree.insert(L);
+            tree.insert(M);
+            tree.insert(N);
+            tree.insert(O);
+            tree.insert(P);
+            
+            assertEquals(16, tree.getNumKeys());
+            assertEquals(15, tree.getNumNodes());
+            
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDegree3_insertPONMLKJIHGFEDCBA() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
+
+    	try {
+            BTree<Long> tree = new BTree<Long>(location, 3);
+            tree.insert(P);
+            tree.insert(O);
+            tree.insert(N);
+            tree.insert(M);
+            tree.insert(L);
+            tree.insert(K);
+            tree.insert(J);
+            tree.insert(I);
+            tree.insert(H);
+            tree.insert(G);
+            tree.insert(F);
+            tree.insert(E);
+            tree.insert(D);
+            tree.insert(C);
+            tree.insert(B);
+            tree.insert(A);
+            assertEquals(16, tree.getNumKeys());
+            assertEquals(15, tree.getNumNodes());
+            System.out.println(tree.toString());
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
@@ -180,7 +281,7 @@ public class BTreeTest {
 
             assertEquals(2, tree.getNumKeys());
             assertEquals(1, tree.getNumNodes());
-
+            System.out.println(tree.toString());
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
@@ -198,10 +299,73 @@ public class BTreeTest {
 
             assertEquals(1, tree.getNumKeys());
             assertEquals(1, tree.getNumNodes());
+            System.out.println(tree.toString());
 
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
+    
+    @Test
+    public void btreeDegree5_insertRandomSeed10x30() {
 
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
+
+    	try {
+            BTree<Long> tree = new BTree<Long>(location, 5);
+            Random rand = new Random(10);
+            long l;
+            for(int i = 0; i < 30; i++) {
+            	l = Math.abs(rand.nextLong()) % 100;
+            	tree.insert(l);
+            }
+            System.out.println(tree.toString());
+            assertEquals(28, tree.getNumKeys());
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+    
+    @Test
+    public void btreeDegree10_insertRandomSeed10x30() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
+
+    	try {
+            BTree<Long> tree = new BTree<Long>(location, 10);
+            Random rand = new Random(10);
+            long l;
+            for(int i = 0; i < 30; i++) {
+            	l = Math.abs(rand.nextLong()) % 100;
+            	tree.insert(l);
+            }
+            System.out.println(tree.toString());
+            assertEquals(28, tree.getNumKeys());
+            assertEquals(5, tree.getNumNodes());
+            
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDegree10_insertRandomSeed10x300() {
+
+        String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insertALot-test";
+
+    	try {
+            BTree<Long> tree = new BTree<Long>(location, 10);
+            Random rand = new Random(10);
+            long l;
+            for(int i = 0; i < 300; i++) {
+            	l = Math.abs(rand.nextLong()) % 100;
+            	tree.insert(l);
+            }
+            System.out.println(tree.toString());
+            assertEquals(95, tree.getNumKeys());
+            
+        } catch (Exception e) {
+            fail("Encounted unknown exception: " + e.getMessage());
+        }
+    }
 }

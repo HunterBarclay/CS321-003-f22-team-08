@@ -26,7 +26,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     private static final String NODE_FILE_EXTENSION = ".node";
 
     private int maxFilesPerDirectory = 1000;
-    private long nextGuid = 0; // Only use positives
+    private long nextGuid = 1; // Only use positives
     private long rootGuid;
     private String treeDirectory;
     private int degree;
@@ -85,20 +85,26 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     public void insert(E key) {
     	BTreeNode node = readDisk(rootGuid);
     	TreeObject<E> obj = new TreeObject<E>(key);
+    	long nodeGuid = node.getGuid();
     	int i;
     	while (!node.isLeaf()) {
     		for(i = 0; i < node.getNumKeys(); i++) {
-    			if(node.getKey(i).compareTo(obj) >= 0) {
+    			if(node.getKey(i).compareTo(obj) == 0) {
+    				node.getKey(i).incrementInstances();
+    				return;
+    			}
+    			if(node.getKey(i).compareTo(obj) > 0) {
     				break;
     			}
     		}
     		node = readDisk(node.getChild(i));
     	}
-    	if (node.isFull()) {
-    		splitNode(node);
-    	}
+    	
         if (node.insert(obj))
     	    numKeys++;
+        if (node.isFull()) {
+    		node = splitNode(node);
+    	}
     	writeDisk(node);
         updateMetaFile();
     }
@@ -250,30 +256,50 @@ public class BTree<E extends Comparable<E>> implements Serializable {
      * @return parent node
      */
     private BTreeNode splitNode(BTreeNode node) {
-    	BTreeNode parentNode;
+    	BTreeNode parentNode = null;
         // If node is the root
     	if (node.getParent() == -1) {
     		node.setParent(allocateNode());
+    		parentNode = readDisk(node.getParent());
+    		parentNode.addChild(node.getGuid());
     	}
-    	parentNode = readDisk(node.getParent());
-    	int index = node.getNumKeys() / 2 + 1;
-    	if (parentNode.isFull()) {
-    		splitNode(parentNode);
+    	if(parentNode == null) {
+    		parentNode = readDisk(node.getParent());
     	}
+    	int index = (node.getNumKeys() - 1) / 2;
     	parentNode.insert(node.getKey(index));
+    	node.removeKey(index);
+    	
+    	if(node.getGuid() == rootGuid) {
+			rootGuid = parentNode.getGuid();
+		}
+    	
     	BTreeNode newNode = readDisk(allocateNode());
-    	for (int i = node.getNumKeys() / 2 + 2; i < node.getNumKeys(); i++) {
-    		newNode.insert(node.getKey(i));
-    		newNode.addChild(node.getChild(i));
+    	int numKeys = node.getNumKeys();
+    	for (int i = index + 1; i <= numKeys; i++) {
+    		newNode.insert(node.getKey(index));
+    		node.removeKey(index);
+    		if (node.getNumChildren() != 0) {
+    			newNode.addChild(node.getChild(index + 1));
+    			node.removeChild(index + 1);
+    		}
+    		
     	}
-    	if (node.getNumChildren() != 0) {
-    		newNode.addChild(node.getChild(node.getNumKeys()));
+    	
+    	if (node.getNumChildren() > node.getNumKeys() + 1) {
+    		newNode.addChild(node.getChild(node.getNumChildren() - 1));
+    		node.removeChild(node.getNumChildren() - 1);
     	}
     	newNode.setParent(parentNode.getGuid());
     	parentNode.addChild(newNode.getGuid());
     	writeDisk(newNode);
-    	writeDisk(parentNode);
-    	node.decreaseKeysAfterSplit();
+    	writeDisk(parentNode);	
+    	writeDisk(node);
+    	if (parentNode.isFull()) {
+    		splitNode(parentNode);
+    	}
+    	
+    	//node.decreaseKeysAfterSplit();
         return parentNode;
     }
 
@@ -309,13 +335,16 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          */
         @SuppressWarnings("unchecked")
         public BTreeNode(long guid, int degree) {
-            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree - 1);
-            children = new long[degree];
+            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree); //modified to allow for objects to be added before splitting
+            children = new long[degree + 1];
 
             this.guid = guid;
             parent = -1;
             numKeys = 0;
             numChildren = 0;
+            for(int i = 0; i < degree; i++) {
+            	children[i] = -1;
+            }
         }
 
         /**
@@ -348,9 +377,9 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          * @return GUID for child node
          */
         public long getChild(int index) {
-            if (index < 0 || index > numKeys)
+            if (index < 0 || index >= numChildren)
                 throw new IndexOutOfBoundsException();
-
+            
             return children[index];
         }
 
@@ -381,11 +410,12 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                     keys[i].incrementInstances();
                     return false;
                 } else {
-                    for (int j = i + 1; j < numKeys; j++) {
+                    for (int j = numKeys; j > i; j--) {
                         keys[j] = keys[j - 1];
                     }
                     keys[i] = object;
         		    numKeys++;
+        		    writeDisk(this);
                     return true;
                 }
         	}
@@ -394,24 +424,55 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         }
 
         /**
+         * removes the child at the given index
+         * @param index
+         */
+        public void removeChild(int index) {
+        	children[index] = -1;
+        	for(int i = index + 1; i < numChildren; i++) {
+        		children[i - 1] = children[i];
+        	}
+        	numChildren--;
+        }
+        
+        /**
+         * remove the key at the given index
+         * @param index
+         */
+        public void removeKey(int index) {
+        	keys[index] = null;
+        	for(int i = index; i < numKeys - 1; i++) {
+        		keys[i] = keys[i + 1];
+        	}
+        	numKeys--;
+        }
+        
+        /**
          * Adds a child to the node.
          * @param nodeId node to add as a child
          * @return true if successful
          */
         public boolean addChild(long nodeId) {
-        	if (isFull()) {
+        	if (numChildren == children.length) {
         		return false;
         	}
         	int i;
         	BTreeNode node = readDisk(nodeId);
         	for (i = 0; i < getNumKeys(); i++) {
-        		if (node.getNumKeys() != 0) {
-	    			if (getKey(i).compareTo(node.getKey(0)) >= 0) {
+        		if(children[i] == -1) {
+    				break;
+    			}else if (node.getNumKeys() != 0) {
+        			if (getKey(i).compareTo(node.getKey(0)) >= 0) {
 	    				break;
 	    			}
         		}
     		}
+        	for (int j = numChildren; j > i; j--) {
+                children[j] = children[j - 1];
+            }
         	children[i] = nodeId;
+        	node.setParent(getGuid());
+        	writeDisk(node);
         	numChildren++;
         	return true;
         }
@@ -424,19 +485,19 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         	parent = parentId;
         }
         
-        /**
-         * decreases the number of keys by half for after a split
-         */
-        public void decreaseKeysAfterSplit() {
-        	numKeys = numKeys/2;
-        }
+//        /**
+//         * decreases the number of keys by half for after a split
+//         */
+//        public void decreaseKeysAfterSplit() {
+//        	numKeys = numKeys/2 - 1;
+//        }
         
         /**
          * checks if the node has a full list of keys
          * @return true if the key list is full
          */
         public boolean isFull() {
-        	return numKeys == degree - 1;
+        	return numKeys == degree;
         }
         
         /**
@@ -470,6 +531,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                     readDisk(children[i + 1]).toString(builder, depth + 1);
                 }
             }
+        	
         }
         
     }

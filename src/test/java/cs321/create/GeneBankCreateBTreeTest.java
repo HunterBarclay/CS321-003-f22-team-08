@@ -56,7 +56,7 @@ public class GeneBankCreateBTreeTest {
         
         Connection connection = null;
         try {
-            connection = GeneBankCreateBTree.makeDatabaseConnection();
+            connection = tree.makeDatabaseConnection();
             GeneBankCreateBTree.writeToDatabase(tree, connection, 3);
             GeneBankCreateBTree.printDatabase(connection);
         } catch (Exception e) {

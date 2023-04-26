@@ -15,13 +15,18 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.Iterator;
 import java.util.Stack;
 
 /**
  * TODO
+ * 
+ * Resources Used:
+ *  - Used to understand iterable versus iterator: https://www.baeldung.com/java-iterator-vs-iterable
  */
-public class BTree<E extends Comparable<E>> implements Serializable {
+public class BTree<E extends Comparable<E>> implements Serializable, Iterable<TreeObject<E>> {
 
     private static final String META_FILE_NAME = "meta.tree";
     private static final String NODE_FILE_EXTENSION = ".node";
@@ -72,6 +77,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
             res = (BTree<T>)ois.readObject();
             ois.close();
             fis.close();
+            res.treeDirectory = treeDirectory;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -86,26 +92,25 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     public void insert(E key) {
     	BTreeNode node = readDisk(rootGuid);
     	TreeObject<E> obj = new TreeObject<E>(key);
-    	long nodeGuid = node.getGuid();
     	int i;
-    	while (!node.isLeaf()) {
-    		for(i = 0; i < node.getNumKeys(); i++) {
-    			if(node.getKey(i).compareTo(obj) == 0) {
-    				node.getKey(i).incrementInstances();
-    				return;
-    			}
-    			if(node.getKey(i).compareTo(obj) > 0) {
-    				break;
-    			}
-    		}
-    		node = readDisk(node.getChild(i));
-    	}
+        while (!node.isLeaf()) {
+            for(i = 0; i < node.getNumKeys(); i++) {
+                if(node.getKey(i).compareTo(obj) == 0) {
+                    node.getKey(i).incrementInstances();
+                    return;
+                }
+                if(node.getKey(i).compareTo(obj) > 0) {
+                    break;
+                }
+            }
+            node = readDisk(node.getChild(i));
+        }
     	
         if (node.insert(obj))
     	    numKeys++;
-        if (node.isFull()) {
-    		node = splitNode(node);
-    	}
+        // if (node.isFull()) {
+    	// 	node = splitNode(node);
+    	// }
     	writeDisk(node);
         updateMetaFile();
     }
@@ -297,7 +302,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     	writeDisk(parentNode);	
     	writeDisk(node);
     	if (parentNode.isFull()) {
-    		splitNode(parentNode);
+    		parentNode = splitNode(parentNode);
     	}
     	
     	//node.decreaseKeysAfterSplit();
@@ -342,8 +347,8 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          */
         @SuppressWarnings("unchecked")
         public BTreeNode(long guid, int degree) {
-            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree); //modified to allow for objects to be added before splitting
-            children = new long[degree + 1];
+            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree - 1); //modified to allow for objects to be added before splitting
+            children = new long[degree];
 
             this.guid = guid;
             parent = -1;
@@ -408,6 +413,11 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          * @return True if a new key was added, false if not. False could indicate either the node was full or they key already existed
          */
         public boolean insert(TreeObject<E> object) {
+
+            if (isFull()) {
+                
+            }
+
         	if (!isFull()) {
         		int i = 0;
                 while (i < numKeys && getKey(i).compareTo(object) < 0) {
@@ -423,6 +433,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                     keys[i] = object;
         		    numKeys++;
         		    writeDisk(this);
+
                     return true;
                 }
         	}
@@ -504,7 +515,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          * @return true if the key list is full
          */
         public boolean isFull() {
-        	return numKeys == degree;
+        	return numKeys >= degree - 1;
         }
         
         /**
@@ -524,6 +535,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                     for (int j = 0; j < depth + 1; j++) {
                         builder.append(" - ");
                     }
+                    builder.append(String.format("(%d)", i));
                     builder.append(keys[i].toString());
                     builder.append("\n");
                 }
@@ -533,6 +545,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                     for (int j = 0; j < depth + 1; j++) {
                         builder.append(" - ");
                     }
+                    builder.append(String.format("(%d)", i));
                     builder.append(keys[i].toString());
                     builder.append("\n");
                     readDisk(children[i + 1]).toString(builder, depth + 1);
@@ -561,6 +574,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         } 
     }
 
+    @Override
     public Iterator<TreeObject<E>> iterator() {
         return new BTreeIterator();
     }
@@ -630,5 +644,18 @@ public class BTree<E extends Comparable<E>> implements Serializable {
             }
         }
 
+    }
+
+    public Connection makeDatabaseConnection() {
+        // See: https://www.sqlitetutorial.net/sqlite-java/create-database/
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(String.format("jdbc:sqlite:%s/btree-sql.sqlite", treeDirectory));
+            if (connection == null)
+                throw new RuntimeException("Failed to create database");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return connection;
     }
 }

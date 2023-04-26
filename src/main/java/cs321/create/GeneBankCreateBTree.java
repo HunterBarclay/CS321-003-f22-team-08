@@ -55,20 +55,7 @@ public class GeneBankCreateBTree {
         System.err.println("Have a great day! The great power of this tree brings great responsibility...");
     }
 
-    public static Connection makeDatabaseConnection() {
-        // See: https://www.sqlitetutorial.net/sqlite-java/create-database/
-        Connection connection = null;
-        try {
-            if (!Files.exists(Paths.get("databases")))
-                Files.createDirectories(Paths.get("databases/"));
-            connection = DriverManager.getConnection("jdbc:sqlite:databases/my-btree.db");
-            if (connection == null)
-                throw new RuntimeException("Failed to create database");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return connection;
-    }
+    
 
     /**
      * Writes data to a database using provided connection
@@ -143,6 +130,7 @@ public class GeneBankCreateBTree {
             builder.append(String.format("%s [%d]", results.getString(1), results.getInt(2)));
             builder.append("\n");
         }
+        results.close();
         statement.close();
     }
 

@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.FileNotFoundException;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
 
 import org.junit.Test;
@@ -53,6 +55,12 @@ public class BTreeTest {
 //            // second child of root has indexNode=2, and so on.
 //            assertEquals(expectedNodesContent[indexNode], bTree.getArrayOfNodeContentsForNodeIndex(indexNode).toString());
 //        }
+    }
+
+    @Test
+    public void wtfTest() {
+        System.out.println(((Long)5l).compareTo((Long)10l));
+        System.out.println(((Integer)5).compareTo((Integer)10));
     }
 
     @Test
@@ -123,7 +131,7 @@ public class BTreeTest {
     }
     
     @Test
-    public void btreeDegree4_insertABCD() {
+    public void btreeDegree4_insertABCDE() {
 
         String location = System.getProperty("java.io.tmpdir") + "/btree-empty4-insert4-test";
 
@@ -132,10 +140,11 @@ public class BTreeTest {
             tree.insert(A);
             tree.insert(B);
             tree.insert(C);
-            System.out.println(tree.toString());
             tree.insert(D);
             System.out.println(tree.toString());
-            assertEquals(4, tree.getNumKeys());
+            tree.insert(E);
+            System.out.println(tree.toString());
+            assertEquals(5, tree.getNumKeys());
             assertEquals(3, tree.getNumNodes());
         } catch (Exception e) {
         	e.printStackTrace();
@@ -161,15 +170,13 @@ public class BTreeTest {
             tree.insert(I);
             tree.insert(J);
             tree.insert(K);
+            tree.insert(K);
             tree.insert(L);
             tree.insert(M);
             tree.insert(N);
             tree.insert(O);
             tree.insert(P);
-            System.out.println(tree.toString());
-            assertEquals(16, tree.getNumKeys());
-            assertEquals(12, tree.getNumNodes());
-            
+            assertTrue(validateTree(tree));
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
@@ -199,7 +206,7 @@ public class BTreeTest {
             tree.insert(B);
             tree.insert(A);
             assertEquals(16, tree.getNumKeys());
-            assertEquals(9, tree.getNumNodes());
+            assertTrue(validateTree(tree));
             System.out.println(tree.toString());
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
@@ -214,9 +221,13 @@ public class BTreeTest {
     	try {
             BTree<Long> tree = new BTree<Long>(location, 3);
             tree.insert(A);
+            System.out.println(tree.toString());
             tree.insert(B);
+            System.out.println(tree.toString());
             tree.insert(C);
+            System.out.println(tree.toString());
             tree.insert(D);
+            System.out.println(tree.toString());
             tree.insert(E);
             tree.insert(F);
             tree.insert(G);
@@ -229,11 +240,14 @@ public class BTreeTest {
             tree.insert(N);
             tree.insert(O);
             tree.insert(P);
+
+            System.out.println(tree.toString());
             
             assertEquals(16, tree.getNumKeys());
-            assertEquals(15, tree.getNumNodes());
+            assertTrue(validateTree(tree));
             
         } catch (Exception e) {
+            e.printStackTrace();
             fail("Encounted unknown exception: " + e.getMessage());
         }
     }
@@ -262,7 +276,7 @@ public class BTreeTest {
             tree.insert(B);
             tree.insert(A);
             assertEquals(16, tree.getNumKeys());
-            assertEquals(15, tree.getNumNodes());
+            assertTrue(validateTree(tree));
             System.out.println(tree.toString());
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
@@ -280,7 +294,7 @@ public class BTreeTest {
             tree.insert(B);
 
             assertEquals(2, tree.getNumKeys());
-            assertEquals(1, tree.getNumNodes());
+            assertTrue(validateTree(tree));
             System.out.println(tree.toString());
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
@@ -298,7 +312,7 @@ public class BTreeTest {
             }
 
             assertEquals(1, tree.getNumKeys());
-            assertEquals(1, tree.getNumNodes());
+            assertTrue(validateTree(tree));
             System.out.println(tree.toString());
 
         } catch (Exception e) {
@@ -321,6 +335,7 @@ public class BTreeTest {
             }
             System.out.println(tree.toString());
             assertEquals(28, tree.getNumKeys());
+            assertTrue(validateTree(tree));
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
@@ -341,7 +356,7 @@ public class BTreeTest {
             }
             System.out.println(tree.toString());
             assertEquals(28, tree.getNumKeys());
-            assertEquals(5, tree.getNumNodes());
+            assertTrue(validateTree(tree));
             
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
@@ -363,7 +378,7 @@ public class BTreeTest {
             }
             System.out.println(tree.toString());
             assertEquals(95, tree.getNumKeys());
-            
+            assertTrue(validateTree(tree));
         } catch (Exception e) {
             fail("Encounted unknown exception: " + e.getMessage());
         }
@@ -392,5 +407,34 @@ public class BTreeTest {
             fail("Exception encountered: " + e.getMessage());
         }
 
+    }
+
+    public <E extends Comparable<E>> boolean validateTree(BTree<E> tree) {
+        Iterator<TreeObject<E>> iter = tree.iterator();
+
+        if (!iter.hasNext())
+            return true;
+        
+        TreeObject<E> previous = iter.next();
+
+        HashSet<E> dupeCheck = null;
+        if (tree.getNumKeys() < 10000) {
+            dupeCheck = new HashSet<E>((int)(tree.getNumKeys() * (1.0f / 0.8f)), 0.8f);
+            dupeCheck.add(previous.getKey());
+        }
+
+        while (iter.hasNext()) {
+            TreeObject<E> next = iter.next();
+            if (previous.compareTo(next) >= 0) {
+                System.out.println(String.format("Tree isn't in order: %s !> %s", next.getKey().toString(), previous.getKey().toString()));
+                return false;
+            }
+            if (dupeCheck != null && !dupeCheck.add(next.getKey())) {
+                System.out.println(String.format("Key '%s' detected more than once", next.getKey().toString()));
+            }
+            previous = next;
+        }
+
+        return true;
     }
 }

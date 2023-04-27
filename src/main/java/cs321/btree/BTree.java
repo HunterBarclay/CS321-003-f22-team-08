@@ -54,8 +54,9 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
         this.treeDirectory = treeDirectory;
         this.degree = degree;
         numKeys = 0;
+        numNodes = 0;
 
-        rootGuid = allocateNode();
+        rootGuid = allocateNode(); // increments node count
         if (rootGuid == -1) {
             throw new RuntimeException();
         }
@@ -92,27 +93,33 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
     public void insert(E key) {
     	BTreeNode node = readDisk(rootGuid);
     	TreeObject<E> obj = new TreeObject<E>(key);
-    	int i;
-        while (!node.isLeaf()) {
-            for(i = 0; i < node.getNumKeys(); i++) {
-                if(node.getKey(i).compareTo(obj) == 0) {
-                    node.getKey(i).incrementInstances();
-                    return;
-                }
-                if(node.getKey(i).compareTo(obj) > 0) {
-                    break;
-                }
-            }
-            node = readDisk(node.getChild(i));
-        }
+        boolean result = node.insert(obj, this);
+        if (result)
+            numKeys++;
+
+        updateMetaFile();
+    	// long nodeGuid = node.getGuid();
+    	// int i;
+    	// while (!node.isLeaf()) {
+    	// 	for(i = 0; i < node.getNumKeys(); i++) {
+    	// 		if(node.getKey(i).compareTo(obj) == 0) {
+    	// 			node.getKey(i).incrementInstances();
+    	// 			return;
+    	// 		}
+    	// 		if(node.getKey(i).compareTo(obj) > 0) {
+    	// 			break;
+    	// 		}
+    	// 	}
+    	// 	node = readDisk(node.getChild(i));
+    	// }
     	
-        if (node.insert(obj))
-    	    numKeys++;
+        // if (node.insert(obj))
+    	//     numKeys++;
         // if (node.isFull()) {
     	// 	node = splitNode(node);
     	// }
-    	writeDisk(node);
-        updateMetaFile();
+    	// writeDisk(node);
+        // updateMetaFile();
     }
     
     /**
@@ -261,53 +268,53 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
      * Split the given node, then return the id of the parent
      * @return parent node
      */
-    private BTreeNode splitNode(BTreeNode node) {
-    	BTreeNode parentNode = null;
-        // If node is the root
-    	if (node.getParent() == -1) {
-    		node.setParent(allocateNode());
-    		parentNode = readDisk(node.getParent());
-    		parentNode.addChild(node.getGuid());
-    	}
-    	if(parentNode == null) {
-    		parentNode = readDisk(node.getParent());
-    	}
-    	int index = (node.getNumKeys() - 1) / 2;
-    	parentNode.insert(node.getKey(index));
-    	node.removeKey(index);
+    // private BTreeNode splitNode(BTreeNode node) {
+    // 	BTreeNode parentNode = null;
+    //     // If node is the root
+    // 	if (node.getParent() == -1) {
+    // 		node.setParent(allocateNode());
+    // 		parentNode = readDisk(node.getParent());
+    // 		parentNode.addChild(node.getGuid());
+    // 	}
+    // 	if(parentNode == null) {
+    // 		parentNode = readDisk(node.getParent());
+    // 	}
+    // 	int index = (node.getNumKeys() - 1) / 2;
+    // 	parentNode.insert(node.getKey(index));
+    // 	node.removeKey(index);
     	
-    	if(node.getGuid() == rootGuid) {
-			rootGuid = parentNode.getGuid();
-		}
+    // 	if(node.getGuid() == rootGuid) {
+	// 		rootGuid = parentNode.getGuid();
+	// 	}
     	
-    	BTreeNode newNode = readDisk(allocateNode());
-    	int numKeys = node.getNumKeys();
-    	for (int i = index + 1; i <= numKeys; i++) {
-    		newNode.insert(node.getKey(index));
-    		node.removeKey(index);
-    		if (node.getNumChildren() != 0) {
-    			newNode.addChild(node.getChild(index + 1));
-    			node.removeChild(index + 1);
-    		}
+    // 	BTreeNode newNode = readDisk(allocateNode());
+    // 	int numKeys = node.getNumKeys();
+    // 	for (int i = index + 1; i <= numKeys; i++) {
+    // 		newNode.insert(node.getKey(index));
+    // 		node.removeKey(index);
+    // 		if (node.getNumChildren() != 0) {
+    // 			newNode.addChild(node.getChild(index + 1));
+    // 			node.removeChild(index + 1);
+    // 		}
     		
-    	}
+    // 	}
     	
-    	if (node.getNumChildren() > node.getNumKeys() + 1) {
-    		newNode.addChild(node.getChild(node.getNumChildren() - 1));
-    		node.removeChild(node.getNumChildren() - 1);
-    	}
-    	newNode.setParent(parentNode.getGuid());
-    	parentNode.addChild(newNode.getGuid());
-    	writeDisk(newNode);
-    	writeDisk(parentNode);	
-    	writeDisk(node);
-    	if (parentNode.isFull()) {
-    		parentNode = splitNode(parentNode);
-    	}
+    // 	if (node.getNumChildren() > node.getNumKeys() + 1) {
+    // 		newNode.addChild(node.getChild(node.getNumChildren() - 1));
+    // 		node.removeChild(node.getNumChildren() - 1);
+    // 	}
+    // 	newNode.setParent(parentNode.getGuid());
+    // 	parentNode.addChild(newNode.getGuid());
+    // 	writeDisk(newNode);
+    // 	writeDisk(parentNode);	
+    // 	writeDisk(node);
+    // 	if (parentNode.isFull()) {
+    // 		splitNode(parentNode);
+    // 	}
     	
-    	//node.decreaseKeysAfterSplit();
-        return parentNode;
-    }
+    // 	//node.decreaseKeysAfterSplit();
+    //     return parentNode;
+    // }
 
     /**
      * Gets the degree of the tree
@@ -347,8 +354,8 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
          */
         @SuppressWarnings("unchecked")
         public BTreeNode(long guid, int degree) {
-            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree - 1); //modified to allow for objects to be added before splitting
-            children = new long[degree];
+            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree); // extra room for splitting
+            children = new long[degree + 1];
 
             this.guid = guid;
             parent = -1;
@@ -410,105 +417,196 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
         /**
          * inserts the given object into the node
          * @param object object to insert
-         * @return True if a new key was added, false if not. False could indicate either the node was full or they key already existed
+         * @return True if a new key was added, false if the key already existed.
          */
-        public boolean insert(TreeObject<E> object) {
+        public boolean insert(TreeObject<E> object, BTree<E> tree) {
+        	
+            if (isLeaf()) {
 
-            if (isFull()) {
-                
-            }
-
-        	if (!isFull()) {
-        		int i = 0;
-                while (i < numKeys && getKey(i).compareTo(object) < 0) {
+                int i = 0;
+                while (i < this.numKeys && object.compareTo(this.keys[i]) > 0) {
                     i++;
                 }
-                if (i < numKeys && getKey(i).compareTo(object) == 0) {
-                    keys[i].incrementInstances();
+
+                if (i < this.numKeys && object.compareTo(this.keys[i]) == 0) {
+                    this.keys[i].incrementInstances();
+                    writeDisk(this);
                     return false;
                 } else {
-                    for (int j = numKeys; j > i; j--) {
-                        keys[j] = keys[j - 1];
+                    TreeObject<E> tmp = this.keys[i];
+                    this.keys[i] = object;
+                    this.numKeys++;
+                    i++;
+                    while (i < this.numKeys) {
+                        TreeObject<E> tmp2 = this.keys[i];
+                        this.keys[i] = tmp;
+                        tmp = tmp2;
+                        i++;
                     }
-                    keys[i] = object;
-        		    numKeys++;
-        		    writeDisk(this);
-
-                    return true;
                 }
-        	}
 
-            return false;
-        }
+                writeDisk(this);
 
-        /**
-         * removes the child at the given index
-         * @param index
-         */
-        public void removeChild(int index) {
-        	children[index] = -1;
-        	for(int i = index + 1; i < numChildren; i++) {
-        		children[i - 1] = children[i];
-        	}
-        	numChildren--;
-        }
-        
-        /**
-         * remove the key at the given index
-         * @param index
-         */
-        public void removeKey(int index) {
-        	keys[index] = null;
-        	for(int i = index; i < numKeys - 1; i++) {
-        		keys[i] = keys[i + 1];
-        	}
-        	numKeys--;
-        }
-        
-        /**
-         * Adds a child to the node.
-         * @param nodeId node to add as a child
-         * @return true if successful
-         */
-        public boolean addChild(long nodeId) {
-        	if (numChildren == children.length) {
-        		return false;
-        	}
-        	int i;
-        	BTreeNode node = readDisk(nodeId);
-        	for (i = 0; i < getNumKeys(); i++) {
-        		if(children[i] == -1) {
-    				break;
-    			}else if (node.getNumKeys() != 0) {
-        			if (getKey(i).compareTo(node.getKey(0)) >= 0) {
-	    				break;
-	    			}
-        		}
-    		}
-        	for (int j = numChildren; j > i; j--) {
-                children[j] = children[j - 1];
+                if (numKeys >= degree && parent == -1) { // If root leaf
+                    splitRoot(tree);
+                }
+
+                return true;
+
+            } else {
+
+                int childIndex = -1;
+
+                if (object.compareTo(this.keys[numKeys - 1]) > 0) { // If key is greater than largest key in node
+                    // readDisk(this.children[numChildren - 1]).insert(object);
+                    childIndex = numChildren - 1;
+                } else if (object.compareTo(this.keys[this.numKeys - 1]) == 0) {
+                    this.keys[this.numKeys - 1].incrementInstances();
+                    writeDisk(this);
+                    return false;
+                } else {
+                    int i = this.numKeys - 2;
+                    while (i >= 0 && object.compareTo(this.keys[i]) < 0) {
+                        i--;
+                    }
+
+                    if (i >= 0 && object.compareTo(this.keys[i]) == 0) {
+                        this.keys[i].incrementInstances();
+                        writeDisk(this);
+                        return false;
+                    } else {
+                        // readDisk(this.children[i + 1]).insert(object);
+                        childIndex = i + 1;
+                    }
+                }
+
+                BTreeNode childNode = readDisk(this.children[childIndex]);
+                boolean result = childNode.insert(object, tree);
+                if (childNode.numKeys >= degree) {
+                    splitChild(childIndex, childNode, tree);
+                }
+
+                if (numKeys >= degree && parent == -1) {
+                    splitRoot(tree);
+                }
+
+                return result;
+
             }
-        	children[i] = nodeId;
-        	node.setParent(getGuid());
-        	writeDisk(node);
-        	numChildren++;
-        	return true;
+
         }
-        
-        /**
-         * sets the parent id
-         * @param parentid id of the parent
-         */
-        public void setParent(long parentId) {
-        	parent = parentId;
+
+        public void splitChild(int childIndex, BTreeNode child, BTree<E> tree) {
+            int medianIndex = child.numKeys / 2; // Right-Hand Median
+            BTreeNode rightChild = readDisk(tree.allocateNode());
+
+            // Move keys over
+            rightChild.numKeys = (child.numKeys - medianIndex) - 1;
+            for (int i = 0; i < rightChild.numKeys; i++) {
+                rightChild.keys[i] = child.keys[i + medianIndex + 1];
+                child.keys[i + medianIndex + 1] = null;
+            }
+            TreeObject<E> medianKey = child.keys[medianIndex];
+            child.keys[medianIndex] = null;
+            child.numKeys = (child.numKeys - rightChild.numKeys) - 1;
+
+            // Move Children over
+            if (!child.isLeaf()) {
+                rightChild.numChildren = child.numChildren - (child.numKeys + 1);
+                for (int i = 0; i < rightChild.numChildren; i++) {
+                    rightChild.children[i] = child.children[i + (child.numKeys + 1)];
+                    child.children[i + (child.numKeys + 1)] = -1;
+                }
+                child.numChildren = child.numChildren - rightChild.numChildren;
+            }
+
+            rightChild.parent = this.guid;
+
+            // Reorganize parent
+            for (int i = this.numKeys; i > childIndex; i--) {
+                this.keys[i] = this.keys[i - 1];
+                this.children[i + 1] = this.children[i];
+            }
+            this.keys[childIndex] = medianKey;
+            this.children[childIndex + 1] = rightChild.guid;
+            this.numKeys++;
+            this.numChildren++;
+
+            writeDisk(child);
+            writeDisk(rightChild);
+            writeDisk(this);
         }
+
+        public void splitRoot(BTree<E> tree) {
+            BTreeNode newRoot = readDisk(tree.allocateNode());
+            parent = newRoot.guid;
+            tree.rootGuid = newRoot.guid;
+            newRoot.numChildren = 1;
+            newRoot.children[0] = this.guid;
+            newRoot.splitChild(0, this, tree);
+        }
+
+        // /**
+        //  * removes the child at the given index
+        //  * @param index
+        //  */
+        // public void removeChild(int index) {
+        // 	children[index] = -1;
+        // 	for(int i = index + 1; i < numChildren; i++) {
+        // 		children[i - 1] = children[i];
+        // 	}
+        // 	numChildren--;
+        // }
         
-//        /**
-//         * decreases the number of keys by half for after a split
-//         */
-//        public void decreaseKeysAfterSplit() {
-//        	numKeys = numKeys/2 - 1;
-//        }
+        // /**
+        //  * remove the key at the given index
+        //  * @param index
+        //  */
+        // public void removeKey(int index) {
+        // 	keys[index] = null;
+        // 	for(int i = index; i < numKeys - 1; i++) {
+        // 		keys[i] = keys[i + 1];
+        // 	}
+        // 	numKeys--;
+        // }
+        
+        // /**
+        //  * Adds a child to the node.
+        //  * @param nodeId node to add as a child
+        //  * @return true if successful
+        //  */
+        // public boolean addChild(long nodeId) {
+        // 	if (numChildren == children.length) {
+        // 		return false;
+        // 	}
+        // 	int i;
+        // 	BTreeNode node = readDisk(nodeId);
+        // 	for (i = 0; i < getNumKeys(); i++) {
+        // 		if(children[i] == -1) {
+    	// 			break;
+    	// 		}else if (node.getNumKeys() != 0) {
+        // 			if (getKey(i).compareTo(node.getKey(0)) >= 0) {
+	    // 				break;
+	    // 			}
+        // 		}
+    	// 	}
+        // 	for (int j = numChildren; j > i; j--) {
+        //         children[j] = children[j - 1];
+        //     }
+        // 	children[i] = nodeId;
+        // 	node.setParent(getGuid());
+        // 	writeDisk(node);
+        // 	numChildren++;
+        // 	return true;
+        // }
+        
+        // /**
+        //  * sets the parent id
+        //  * @param parentid id of the parent
+        //  */
+        // public void setParent(long parentId) {
+        // 	parent = parentId;
+        // }
         
         /**
          * checks if the node has a full list of keys

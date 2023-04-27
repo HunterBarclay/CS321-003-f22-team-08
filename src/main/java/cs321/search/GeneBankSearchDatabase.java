@@ -16,12 +16,6 @@ public class GeneBankSearchDatabase
         System.out.println("Hello world from cs321.search.GeneBankSearchDatabase.main");
     }
 
-    public static void useDatabase(Connection connection) throws SQLException {
-        Statement statement = connection.createStatement();
-        statement.executeUpdate("USE 'subsequences'");
-        statement.close();
-    }
-
     public static int queryDatabase(Connection connection, String subsequence) throws SQLException {
         Statement statement = connection.createStatement();
         ResultSet sqlResultSet = statement.executeQuery(String.format("SELECT instances FROM subsequences WHERE subsequences.key = '%s';", subsequence));

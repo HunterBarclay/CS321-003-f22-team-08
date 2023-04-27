@@ -19,8 +19,8 @@ import java.sql.Connection;
  */
 public class GeneBankSearchDatabaseTest {
 
-    // public String btreeTest1Location = System.getProperty("java.io.tmpdir") + "/btree-database-search-test";
-    public String btreeTest1Location = "testTree";
+    public String btreeTest1Location = System.getProperty("java.io.tmpdir") + "/btree-database-search-test";
+    public String btreeTest2Location = System.getProperty("java.io.tmpdir") + "/btree-database-search-test-duplicates";
 
     @Before
     public void initializeTestTrees() {
@@ -35,6 +35,26 @@ public class GeneBankSearchDatabaseTest {
                     test1.insert(SequenceUtils.dnaStringToLong(s));
                 }
                 GeneBankCreateBTree.writeToDatabase(test1, test1.makeDatabaseConnection(), 20);
+                System.out.println(test1.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("Failed Setup");
+            }
+        }
+
+        {
+            try {
+                BTree<Long> test2 = new BTree<Long>(btreeTest2Location, 5);
+                GeneBankParser gbParser = new GeneBankParser(1, "data/files_gbk/test0.gbk");
+                int counter = 0;
+                for (String s : gbParser) {
+                    if (s.equalsIgnoreCase("a"))
+                        counter++;
+                    test2.insert(SequenceUtils.dnaStringToLong(s));
+                }
+                System.out.println("'a' -> " + counter);
+                GeneBankCreateBTree.writeToDatabase(test2, test2.makeDatabaseConnection(), 1);
+                System.out.println(test2.toString());
             } catch (Exception e) {
                 e.printStackTrace();
                 fail("Failed Setup");
@@ -49,9 +69,23 @@ public class GeneBankSearchDatabaseTest {
         try {
             BTree<Long> tree = BTree.<Long>loadBTree(btreeTest1Location);
             Connection connection = tree.makeDatabaseConnection();
-            GeneBankSearchDatabase.useDatabase(connection);
             int instances = GeneBankSearchDatabase.queryDatabase(connection, "NONEXISTENT");
             assertEquals(0, instances);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Encountered exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void btreeDatabaseSearchForDuplicates() {
+        try {
+            BTree<Long> tree = BTree.<Long>loadBTree(btreeTest2Location);
+            Connection connection = tree.makeDatabaseConnection();
+            int instances = GeneBankSearchDatabase.queryDatabase(connection, "a");
+            System.out.println(tree.toString());
+            System.out.println(instances);
+            assertEquals(1543, instances);
         } catch (Exception e) {
             e.printStackTrace();
             fail("Encountered exception: " + e.getMessage());

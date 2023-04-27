@@ -140,4 +140,17 @@ public class SequenceUtilsTest {
             fail("Unknown exception encountered: " + e.getMessage());
         }
     }
+
+    @Test
+    public void geneBankParserSmallTest() {
+        try {
+            GeneBankParser parser = new GeneBankParser(1, "data/files_gbk/test0.gbk");
+            for (String s : parser) {
+                System.out.println(s);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Encountered exception");
+        }
+    }
 }

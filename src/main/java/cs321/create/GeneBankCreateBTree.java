@@ -7,6 +7,7 @@ import cs321.common.GeneBankParser;
 
 import java.util.Scanner;
 import java.io.*;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,7 @@ public class GeneBankCreateBTree {
     {
         System.err.println("Hello world from GeneBank Create BTree!");
         GeneBankCreateBTreeArguments gbkArgs = parseArgumentsAndHandleExceptions(args);
-        String BTreeFileName = gbkArgs.getGbkFileName() + ".btree.data." + 
+        String BTreeFileName = Paths.get(gbkArgs.getGbkFileName()).getFileName() + ".btree.data." + 
 						gbkArgs.getSubsequenceLength() + "." +
 						gbkArgs.getDegree();
         System.err.println("Args parsed!");

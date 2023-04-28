@@ -50,10 +50,6 @@ public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObjec
         this.instances = numInstances;
     }
 
-    public void setInstances(int numInstances) {
-        this.instances = numInstances;
-    }
-
     /**
      * Gives Key
      * 

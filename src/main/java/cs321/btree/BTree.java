@@ -142,25 +142,24 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
         return search(readDisk(rootGuid), key);
     }
 
-    /**
-     * Private helper method that searches and returns found TreeObject 
-     * given a node and a key
-     * @param node the node to be searched in
+     /**
+     * Searches the BTree for a matching key and returns the TreeObject 
+     * that contains that given key if found
      * @param key Key to find
-     * @return TreeObject at given key
+     * @return TreeObject containing key
      */
-    private TreeObject<E> search(BTreeNode node, E key) {
-        return search(node, key, false, 0);
+    public TreeObject<E> search(E key, Cache cache) {
+        return search(readDisk(rootGuid), key, cache);
     }
 
     /**
-     * Private helper method that searches and returns found TreeObject 
+     * Public helper method that searches and returns found TreeObject 
      * given a node and a key
      * @param node the node to be searched in
      * @param key Key to find
      * @return TreeObject at given key
      */
-    private TreeObject<E> search(BTreeNode node, E key, Boolean useCache, int cacheSize) {
+    public TreeObject<E> search(BTreeNode node, E key) {
         int i = 0;
         while (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) > 0) {
             i++;
@@ -175,12 +174,32 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
         }
         else {
             return search(readDisk(node.children[i]), key);
-            // if (!useCache) {
-            //     return search(readDisk(node.children[i]), key);
-            // } else {
-                //Cache cache = new Cache(cacheSize);
-                //cache.getObject(node.children[i]);
-            //}
+        }
+    }
+
+    /**
+     * Private helper method that searches and returns found TreeObject 
+     * given a node and a key
+     * @param node the node to be searched in
+     * @param key Key to find
+     * @return TreeObject at given key
+     */
+    public TreeObject<E> search(BTreeNode node, E key, Cache cache) {
+        int i = 0;
+        while (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) > 0) {
+            i++;
+        }
+        if (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) == 0) {
+            TreeObject<E> copyTreeObject = new TreeObject<E>(key);
+            copyTreeObject.setInstances(node.getKey(i).getInstances());
+            return copyTreeObject;
+        }
+        else if (node.children.length == 0) {
+            return null;
+        }
+        else {
+            BTreeNode node2 = cache.getObject(node.children[i]);
+            return search(node2, key, cache);
         }
     }
 
@@ -570,6 +589,64 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
         	}
         	return false;
         }
+
+        /**
+         * To string method for BTreeNode that prints the elements with some spacing
+         * out to show the depth of a given key
+         * 
+         * Example:
+         *  -  - (0)0 1
+         *  -  - (1)1 1
+         *  - (0)2 1
+         *  -  - (0)3 1
+         *  -  - (1)4 1
+         * 
+         * @param builder   String builder to better construct the final result
+         * @param depth     Depth tracker
+         */
+        public void toString(StringBuilder builder, int depth) {
+            if (isLeaf()) {
+                for (int i = 0; i < numKeys; i++) {
+                    for (int j = 0; j < depth + 1; j++) {
+                        builder.append(" - ");
+                    }
+                    builder.append(String.format("(%d)", i));
+                    builder.append(keys[i].toString());
+                    builder.append("\n");
+                }
+            } else {
+                readDisk(children[0]).toString(builder, depth + 1);
+                for (int i = 0; i < numKeys; i++) {
+                    for (int j = 0; j < depth + 1; j++) {
+                        builder.append(" - ");
+                    }
+                    builder.append(String.format("(%d)", i));
+                    builder.append(keys[i].toString());
+                    builder.append("\n");
+                    readDisk(children[i + 1]).toString(builder, depth + 1);
+                }
+            }
+        }
+        
+        /**
+         * toString with no depth for easier use in parsing
+         * @param builder builder to make the string
+         */
+        public void toStringParseable(StringBuilder builder) {
+            if (isLeaf()) {
+                for (int i = 0; i < numKeys; i++) {
+                    builder.append(keys[i].toString());
+                    builder.append("\n");
+                }
+            } else {
+                readDisk(children[0]).toStringParseable(builder);
+                for (int i = 0; i < numKeys; i++) {
+                    builder.append(keys[i].toString());
+                    builder.append("\n");
+                    readDisk(children[i + 1]).toStringParseable(builder);
+                }
+            }    
+        } 
         
     }
 
@@ -654,6 +731,102 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
             return returnString;
         }
 
+    }
+
+    @Override
+    public Iterator<TreeObject<E>> iterator() {
+        return new BTreeIterator();
+    }
+
+    /**
+     * Iterator for iterating through the contents of the BTree in order
+     */
+    private class BTreeIterator implements Iterator<TreeObject<E>> {
+
+        private Stack<PathStep> currentPath;
+        private BTreeNode currentNode;
+        private int currentNodeIndex;
+
+        /**
+         * Constructs the iterator
+         */
+        public BTreeIterator() {
+            currentPath = new Stack<PathStep>();
+
+            BTreeNode cursor = readDisk(rootGuid);
+            while (!cursor.isLeaf()) {
+                currentPath.add(new PathStep(cursor, 0));
+                cursor = readDisk(cursor.children[0]);
+            }
+
+            currentNode = cursor;
+            currentNodeIndex = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !(currentPath.empty() && currentNodeIndex >= currentNode.numKeys);
+        }
+
+        @Override
+        public TreeObject<E> next() {
+
+            if (!hasNext())
+                throw new RuntimeException("Nothing new");
+
+            TreeObject<E> returnValue;
+
+            if (currentNode.isLeaf()) {
+                returnValue = currentNode.keys[currentNodeIndex];
+                currentNodeIndex++;
+                while (currentNodeIndex >= currentNode.numKeys && currentPath.size() > 0) {
+                    PathStep step = currentPath.pop();
+                    currentNode = step.node;
+                    currentNodeIndex = step.lastVisitedChild;
+                }
+            } else {
+                returnValue = currentNode.keys[currentNodeIndex];
+                currentNodeIndex++;
+                while (!currentNode.isLeaf()) {
+                    currentPath.add(new PathStep(currentNode, currentNodeIndex));
+                    currentNode = readDisk(currentNode.children[currentNodeIndex]);
+                    currentNodeIndex = 0;
+                }
+            }
+
+            return new TreeObject<E>(returnValue);
+        }
+
+        private class PathStep {
+            public BTreeNode node;
+            public int lastVisitedChild;
+
+            public PathStep(BTreeNode node, int lastVisitedChild) {
+                this.node = node;
+                this.lastVisitedChild = lastVisitedChild;
+            }
+        }
+
+    }
+
+    /**
+     * Establishes a database connection to the SQLite file
+     * 
+     * TODO: Adjust to make sure naming is as directed in README
+     * 
+     * @return  Connection to the database
+     */
+    public Connection makeDatabaseConnection() {
+        // See: https://www.sqlitetutorial.net/sqlite-java/create-database/
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(String.format("jdbc:sqlite:%s/btree-sql.sqlite", treeDirectory));
+            if (connection == null)
+                throw new RuntimeException("Failed to create database");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return connection;
     }
 
 }

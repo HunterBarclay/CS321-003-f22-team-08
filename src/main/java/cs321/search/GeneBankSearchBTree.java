@@ -1,14 +1,13 @@
 package cs321.search;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
 import cs321.btree.BTree;
+import cs321.btree.BTree.Cache;
 import cs321.btree.TreeObject;
 import cs321.common.ParseArgumentException;
-import cs321.common.ParseArgumentUtils;
 import cs321.create.SequenceUtils;;
 
 public class GeneBankSearchBTree
@@ -37,19 +36,38 @@ public class GeneBankSearchBTree
         dumpFileName += ".out";
 
         PrintWriter pw = new PrintWriter(dumpFileName);
+
+        Cache cache = loadedTree.new Cache(geneBankSearchBTreeArguments.getCacheSize());
             
         while (fileScan.hasNextLine()) {
             String line = fileScan.nextLine();
             Scanner lineScan = new Scanner(line);
-            String subsequenceQuerySting = lineScan.next();
-            long subsequenceQueryLong = SequenceUtils.dnaStringToLong(subsequenceQuerySting);
+            String subsequenceQueryString = lineScan.next();
+            long subsequenceQueryLong = SequenceUtils.dnaStringToLong(subsequenceQueryString);
 
             int numInstances = 0;
 
-            TreeObject<Long> treeObj = loadedTree.search(subsequenceQueryLong);
+            TreeObject<Long> treeObj;
+            if (geneBankSearchBTreeArguments.getUseCache()) {
+                treeObj = loadedTree.search(subsequenceQueryLong, cache);
+            } else {
+                treeObj = loadedTree.search(subsequenceQueryLong);
+            }
+
+            String subsequenceComplimentString = SequenceUtils.getComplement(subsequenceQueryString);
+            long subsequenceComplimentLong = SequenceUtils.dnaStringToLong(subsequenceComplimentString);
+
+            TreeObject<Long> treeObj2;
+            if (geneBankSearchBTreeArguments.getUseCache()) {
+                treeObj2 = loadedTree.search(subsequenceComplimentLong, cache);
+            } else {
+                treeObj2 = loadedTree.search(subsequenceComplimentLong);
+            }
+
             numInstances = treeObj.getInstances();
+            numInstances += treeObj2.getInstances();
             
-            pw.println(subsequenceQuerySting + " " + numInstances);
+            pw.println(subsequenceQueryString + " " + numInstances);
 
             lineScan.close();
 
@@ -85,7 +103,7 @@ public class GeneBankSearchBTree
     public static GeneBankSearchBTreeArguments parseArguments(String[] args) throws ParseArgumentException
     {
         if (args.length < 5 || args.length > 7) {
-            throw new ParseArgumentException("Error: Invalid number of arguments passed in.");
+            throw new ParseArgumentException("Error: Invalid number of arguments passed in.\n");
         }
         String[] option = new String[7];
         String[] value = new String[7];

@@ -100,6 +100,10 @@ public class GeneBankSearchBTreeArguments
         return this.getCacheSize();
     }
 
+    public boolean getUseCache() {
+        return this.useCache;
+    }
+
     @Override
     public String toString()
     {

@@ -16,6 +16,7 @@ import java.util.Iterator;
 public class GeneBankCreateBTree {
 
     private final static String LINE_SEPARATOR = "==============================";
+    private final static int DEFAULT_DEGREE = 204;
     
     private static GeneBankCreateBTreeArguments geneBankCreateBTreeArguments = null;
 
@@ -28,7 +29,7 @@ public class GeneBankCreateBTree {
 						gbkArgs.getDegree();
         System.err.println("Args parsed!");
         //TODO add cache functionality here
-        BTree<Long> tree = new BTree<Long>(BTreeFileName,gbkArgs.getDegree());
+        BTree<Long> tree = new BTree<Long>(BTreeFileName, gbkArgs.getDegree() == 0 ? DEFAULT_DEGREE : gbkArgs.getDegree());
         GeneBankParser parser = new GeneBankParser(gbkArgs.getSubsequenceLength(), gbkArgs.getGbkFileName());
         System.err.println("Generating Tree! This may take a moment...");
         while(parser.hasNext()) {
@@ -189,7 +190,7 @@ public class GeneBankCreateBTree {
 	    		useCacheSet = true;
 	    	}else if(args[i].length() > 9 && args[i].substring(0,9).equals("--degree=")) {
 	    		if(args[i].substring(9).equals("0")) {
-	    			degree = 204;
+	    			degree = 0;
 	    		}else {
 	    			try {
 						degree = Integer.parseInt(args[i].substring(9));

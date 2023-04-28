@@ -88,6 +88,18 @@ public class GeneBankSearchBTreeArguments
         return true;
     }
 
+    public String getBTreeFileName() {
+        return this.btreeFileName;
+    }
+
+    public String getQueryFileName() {
+        return this.queryFileName;
+    }
+
+    public int getCacheSize() {
+        return this.getCacheSize();
+    }
+
     @Override
     public String toString()
     {

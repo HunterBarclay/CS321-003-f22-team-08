@@ -47,7 +47,7 @@ public class GeneBankSearchDatabase {
     }
 
     public static void printUsage() {
-        System.out.println("java -jar build/libs/GeneBankSearchDatabase.jar --database=<SQLite-database-path> --queryfile=<query-file>");
+        System.err.println("java -jar build/libs/GeneBankSearchDatabase.jar --database=<SQLite-database-path> --queryfile=<query-file>");
     }
 
     public static int queryDatabase(Connection connection, String subsequence) throws SQLException {

@@ -37,7 +37,8 @@ public class GeneBankCreateBTree {
         parser.finalize();
         System.err.println("Tree Created at " + BTreeFileName + "!");
         if(gbkArgs.getDebugLevel() == 1) {
-        	File dumpFile = new File(gbkArgs.getGbkFileName() +".dump." +gbkArgs.getSubsequenceLength());
+        	// File dumpFile = new File(gbkArgs.getGbkFileName() +".dump." +gbkArgs.getSubsequenceLength());
+            File dumpFile = new File("dump"); // tests script require the dump to be at ./dump
         	PrintWriter write = new PrintWriter(dumpFile);
         	Scanner scan = new Scanner(tree.toStringParseable());
         	while(scan.hasNextLine()) {
@@ -45,7 +46,7 @@ public class GeneBankCreateBTree {
         		scan.nextLine();
         	}
         	write.close();
-        	System.err.println("Tree dumped to file " + gbkArgs.getGbkFileName() +".dump." + gbkArgs.getSubsequenceLength());
+        	System.err.println("Tree dumped to file './dump'");
         }
         
         System.err.println("Have a great day! The great power of this tree brings great responsibility...");

@@ -14,7 +14,6 @@ public class GeneBankSearchBTree
 
     public static void main(String[] args) throws Exception
     {
-        System.out.println("Hello world from cs321.search.GeneBankSearchBTree.main");
         GeneBankSearchBTreeArguments geneBankSearchBTreeArguments = parseArgumentsAndHandleExceptions(args);
         
         BTree<Long> loadedTree = BTree.<Long>loadBTree(geneBankSearchBTreeArguments.getBTreeFileName());
@@ -36,6 +35,7 @@ public class GeneBankSearchBTree
             Scanner lineScan = new Scanner(line);
             String subsequenceQueryString = lineScan.next();
             long subsequenceQueryLong = SequenceUtils.dnaStringToLong(subsequenceQueryString);
+            subsequenceQueryString = SequenceUtils.longToDnaString(subsequenceQueryLong, geneBankSearchBTreeArguments.getSequenceLength());
 
             int numInstances = 0;
 

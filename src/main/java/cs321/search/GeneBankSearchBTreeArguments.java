@@ -100,8 +100,16 @@ public class GeneBankSearchBTreeArguments
         return this.cacheSize;
     }
 
+    /**
+     * Gives the designated cache size
+     * @return cache size
+     */
     public boolean getUseCache() {
         return this.useCache;
+    }
+
+    public int getSequenceLength() {
+        return this.subsequenceLength;
     }
 
     @Override

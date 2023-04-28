@@ -220,7 +220,7 @@ public class GeneBankCreateBTree {
 				}
 	    	}else if(args[i].length() > 12 && args[i].substring(0,12).equals("--cachesize=")) {
 	    		try {
-					length = Integer.parseInt(args[i].substring(12));
+					cacheSize = Integer.parseInt(args[i].substring(12));
 					if(cacheSize < 0) {
 			    		throw new ParseArgumentException("--cachesize expects a positive integer value. You entered: " + args[i].substring(12));
 					}

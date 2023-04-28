@@ -107,16 +107,8 @@ public class GeneBankCreateBTreeArguments
 		return useCache;
 	}
 
-	public int getDegree() {
-		return degree;
-	}
-
 	public String getGbkFileName() {
 		return gbkFileName;
-	}
-
-	public int getSubsequenceLength() {
-		return subsequenceLength;
 	}
 
 	public int getCacheSize() {

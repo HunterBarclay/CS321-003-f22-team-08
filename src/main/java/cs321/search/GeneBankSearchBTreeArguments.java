@@ -88,26 +88,14 @@ public class GeneBankSearchBTreeArguments
         return true;
     }
 
-    /**
-     * Gives the name of the BTreeFile
-     * @return B-tree file name
-     */
     public String getBTreeFileName() {
         return this.btreeFileName;
     }
 
-    /**
-     * Gives the name of the query file
-     * @return query file
-     */
     public String getQueryFileName() {
         return this.queryFileName;
     }
 
-    /**
-     * Gives the designated size of the cache
-     * @return cache size
-     */
     public int getCacheSize() {
         return this.cacheSize;
     }
@@ -120,10 +108,6 @@ public class GeneBankSearchBTreeArguments
         return this.useCache;
     }
 
-    /**
-     * Gives the designated length of the sequence
-     * @return sequence length
-     */
     public int getSequenceLength() {
         return this.subsequenceLength;
     }

@@ -46,19 +46,24 @@ public class GeneBankSearchBTree
                 treeObj = loadedTree.search(subsequenceQueryLong);
             }
 
-            String subsequenceComplimentString = SequenceUtils.getComplement(subsequenceQueryString);
-            long subsequenceComplimentLong = SequenceUtils.dnaStringToLong(subsequenceComplimentString);
+            if (treeObj != null) {
 
-            TreeObject<Long> treeObj2;
-            if (geneBankSearchBTreeArguments.getUseCache()) {
-                treeObj2 = loadedTree.search(subsequenceComplimentLong, cache);
-            } else {
-                treeObj2 = loadedTree.search(subsequenceComplimentLong);
+                String subsequenceComplimentString = SequenceUtils.getComplement(subsequenceQueryString);
+                long subsequenceComplimentLong = SequenceUtils.dnaStringToLong(subsequenceComplimentString);
+
+                TreeObject<Long> treeObj2;
+                if (geneBankSearchBTreeArguments.getUseCache()) {
+                    treeObj2 = loadedTree.search(subsequenceComplimentLong, cache);
+                } else {
+                    treeObj2 = loadedTree.search(subsequenceComplimentLong);
+                }
+
+                numInstances = treeObj.getInstances();
+                if (treeObj2 != null) {
+                    numInstances += treeObj2.getInstances();
+                }
             }
-
-            numInstances = treeObj.getInstances();
-            numInstances += treeObj2.getInstances();
-            
+                
             System.out.println(subsequenceQueryString + " " + numInstances);
 
             lineScan.close();

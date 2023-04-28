@@ -123,7 +123,7 @@ public class GeneBankSearchBTree
         int cacheSize = 0;
         int debugLevel = 0;
 
-        for (int i = 0; i < option.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             switch (option[i]) {
                 case "--cache":
                     if (Integer.parseInt(value[i]) == 1) {

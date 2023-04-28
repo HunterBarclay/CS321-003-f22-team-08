@@ -73,6 +73,22 @@ public class GeneBankCreateBTreeArguments
         return true;
     }
 
+    /**
+     * Returns the length of subsequences to look for
+     * @return Length of subsequences to look for
+     */
+    public int getSubsequenceLength() {
+        return subsequenceLength;
+    }
+
+    /**
+     * Returns the degree of the BTree
+     * @return Degree of the BTree
+     */
+    public int getDegree() {
+        return degree;
+    }
+
     @Override
     public String toString()
     {
@@ -86,4 +102,20 @@ public class GeneBankCreateBTreeArguments
                 ", debugLevel=" + debugLevel +
                 '}';
     }
+
+	public boolean isUseCache() {
+		return useCache;
+	}
+
+	public String getGbkFileName() {
+		return gbkFileName;
+	}
+
+	public int getCacheSize() {
+		return cacheSize;
+	}
+
+	public int getDebugLevel() {
+		return debugLevel;
+	}
 }

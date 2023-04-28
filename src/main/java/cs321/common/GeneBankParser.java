@@ -17,8 +17,9 @@ import java.util.Scanner;
  * 
  * Sources:
  * - Used for streaming the file in one line at a time: https://www.amitph.com/java-read-write-large-files-efficiently/
+ * - Used for understanding iterable versus iterator: https://www.baeldung.com/java-iterator-vs-iterable
  */
-public class GeneBankParser implements Iterator<String> {
+public class GeneBankParser implements Iterator<String>, Iterable<String> {
 
     private Scanner fileStream;
     private StringBuilder subsequence;
@@ -140,6 +141,9 @@ public class GeneBankParser implements Iterator<String> {
     @Override
     public String next() {
 
+        if (!hasNext())
+            throw new RuntimeException("Nothing new");
+
         // We are going to have the next sequence stored preemptively to make it so hasNext works
         String result = subsequence.toString();
 
@@ -170,6 +174,11 @@ public class GeneBankParser implements Iterator<String> {
         
 
         return result;
+    }
+
+    @Override
+    public Iterator<String> iterator() {
+        return this;
     }
 
 }

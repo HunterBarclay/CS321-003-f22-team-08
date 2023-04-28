@@ -31,7 +31,7 @@ public class TreeObject<E extends Comparable<E>> implements Comparable<TreeObjec
 
     @Override
     public String toString() {
-        return String.format("%s [%d]", key.toString(), instances);
+        return String.format("%s %d", key.toString(), instances);
     }
 
 }

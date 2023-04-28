@@ -1,6 +1,5 @@
 package cs321.create;
 
-import cs321.Utils;
 import cs321.common.GeneBankParser;
 
 import org.junit.Ignore;
@@ -8,10 +7,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,6 +76,7 @@ public class SequenceUtilsTest {
         try {
             GeneBankParser parser = new GeneBankParser(1, "some/file/that/dont/exists.lmfao");
             fail("No exception was encountered");
+            parser.finalize(); // Removes warning
         } catch (FileNotFoundException fnfe) {
             assert(true);
         } catch (Exception e) {
@@ -92,6 +89,7 @@ public class SequenceUtilsTest {
         try {
             GeneBankParser parser = new GeneBankParser(40, "data/files_gbk/test0.gbk");
             fail("No exception was encountered");
+            parser.finalize(); // Removes warning
         } catch (InvalidParameterException ipe) {
             assert(true);
         } catch (Exception e) {

@@ -9,15 +9,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.util.Iterator;
 import java.util.Random;
-
-import javax.print.attribute.standard.PrinterInfo;
 
 public class GeneBankCreateBTreeTest {
 

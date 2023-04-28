@@ -85,6 +85,7 @@ public class BTreeTest {
         try {
             BTree<Long> tree = BTree.loadBTree("doesnt-exist-tree");
             fail("No exception encountered");
+            tree.iterator(); // Do nothing to remove warning
         } catch (FileNotFoundException fnfe) {
             assertTrue(true);
         } catch (Exception e) {

@@ -194,7 +194,7 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
             copyTreeObject.setInstances(node.getKey(i).getInstances());
             return copyTreeObject;
         }
-        else if (node.children.length == 0) {
+        else if (node.numChildren == 0) {
             return null;
         }
         else {

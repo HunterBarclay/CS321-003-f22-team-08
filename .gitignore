@@ -18,6 +18,7 @@ build/
 # SQLite database files
 *.sqlite3
 *.db
+databases/
 
 # Y Chromosome Test File
 data/files_gbk/hs_ref_chrY.gbk

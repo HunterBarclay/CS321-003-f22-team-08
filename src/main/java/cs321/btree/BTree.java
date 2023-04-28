@@ -4,23 +4,29 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.Iterator;
+import java.util.Stack;
 
 /**
- * TODO
+ * BTree creates a BTree data structure and store it in a given directory.
+ * 
+ * BTree is implemented in such a way that it can store a generic object and keep track
+ * of how many times that given object (or key) was inserted into the data structure. It
+ * stores a counter for each unique key.
+ * 
+ * Resources Used:
+ *  - Used to understand iterable versus iterator: https://www.baeldung.com/java-iterator-vs-iterable
  */
-public class BTree<E extends Comparable<E>> implements Serializable {
+public class BTree<E extends Comparable<E>> implements Serializable, Iterable<TreeObject<E>> {
 
     private static final String META_FILE_NAME = "meta.tree";
     private static final String NODE_FILE_EXTENSION = ".node";
@@ -33,6 +39,12 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     private long numKeys;
     private int numNodes;
 
+    /**
+     * Constructs a BTree
+     * 
+     * @param treeDirectory Directory to store the tree in
+     * @param degree        Maximum degree of the BTree
+     */
     public BTree(String treeDirectory, int degree) {
         // Will always create a new BTree with constructor
 
@@ -48,8 +60,9 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         this.treeDirectory = treeDirectory;
         this.degree = degree;
         numKeys = 0;
+        numNodes = 0;
 
-        rootGuid = allocateNode();
+        rootGuid = allocateNode(); // increments node count
         if (rootGuid == -1) {
             throw new RuntimeException();
         }
@@ -57,6 +70,14 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         updateMetaFile();
     }
 
+    /**
+     * Loads a stored BTree
+     * 
+     * @param <T>                       Generic type the BTree stores
+     * @param treeDirectory             Directory with the BTree contents
+     * @return                          Deserialized BTree object
+     * @throws FileNotFoundException    If the directory doesn't exist
+     */
     @SuppressWarnings("unchecked")
     public static <T extends Comparable<T>> BTree<T> loadBTree(String treeDirectory) throws FileNotFoundException {
         File f = new File(String.format("%s/%s", treeDirectory, META_FILE_NAME));
@@ -71,6 +92,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
             res = (BTree<T>)ois.readObject();
             ois.close();
             fis.close();
+            res.treeDirectory = treeDirectory;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -85,27 +107,10 @@ public class BTree<E extends Comparable<E>> implements Serializable {
     public void insert(E key) {
     	BTreeNode node = readDisk(rootGuid);
     	TreeObject<E> obj = new TreeObject<E>(key);
-    	long nodeGuid = node.getGuid();
-    	int i;
-    	while (!node.isLeaf()) {
-    		for(i = 0; i < node.getNumKeys(); i++) {
-    			if(node.getKey(i).compareTo(obj) == 0) {
-    				node.getKey(i).incrementInstances();
-    				return;
-    			}
-    			if(node.getKey(i).compareTo(obj) > 0) {
-    				break;
-    			}
-    		}
-    		node = readDisk(node.getChild(i));
-    	}
-    	
-        if (node.insert(obj))
-    	    numKeys++;
-        if (node.isFull()) {
-    		node = splitNode(node);
-    	}
-    	writeDisk(node);
+        boolean result = node.insert(obj, this);
+        if (result)
+            numKeys++;
+
         updateMetaFile();
     }
     
@@ -217,6 +222,12 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         }
     }
 
+    /**
+     * Returns file location given a GUID
+     * 
+     * @param guid  GUID of node
+     * @return      File location of node
+     */
     private File getNodeFile(long guid) {
         long file = Math.floorMod(guid, maxFilesPerDirectory);
         long directory = Math.floorDiv(guid, maxFilesPerDirectory);
@@ -234,6 +245,11 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         return new File(paritionFile);
     }
 
+    /**
+     * rm -rf for given directory.
+     * 
+     * @param directory Directory to delete
+     */
     private void deleteDirectoryRecursive(Path directory) {
         try {
             Iterator<Path> iter = Files.newDirectoryStream(directory).iterator();
@@ -250,58 +266,6 @@ public class BTree<E extends Comparable<E>> implements Serializable {
             e.printStackTrace();
         }
     }
-    
-    /**
-     * Split the given node, then return the id of the parent
-     * @return parent node
-     */
-    private BTreeNode splitNode(BTreeNode node) {
-    	BTreeNode parentNode = null;
-        // If node is the root
-    	if (node.getParent() == -1) {
-    		node.setParent(allocateNode());
-    		parentNode = readDisk(node.getParent());
-    		parentNode.addChild(node.getGuid());
-    	}
-    	if(parentNode == null) {
-    		parentNode = readDisk(node.getParent());
-    	}
-    	int index = (node.getNumKeys() - 1) / 2;
-    	parentNode.insert(node.getKey(index));
-    	node.removeKey(index);
-    	
-    	if(node.getGuid() == rootGuid) {
-			rootGuid = parentNode.getGuid();
-		}
-    	
-    	BTreeNode newNode = readDisk(allocateNode());
-    	int numKeys = node.getNumKeys();
-    	for (int i = index + 1; i <= numKeys; i++) {
-    		newNode.insert(node.getKey(index));
-    		node.removeKey(index);
-    		if (node.getNumChildren() != 0) {
-    			newNode.addChild(node.getChild(index + 1));
-    			node.removeChild(index + 1);
-    		}
-    		
-    	}
-    	
-    	if (node.getNumChildren() > node.getNumKeys() + 1) {
-    		newNode.addChild(node.getChild(node.getNumChildren() - 1));
-    		node.removeChild(node.getNumChildren() - 1);
-    	}
-    	newNode.setParent(parentNode.getGuid());
-    	parentNode.addChild(newNode.getGuid());
-    	writeDisk(newNode);
-    	writeDisk(parentNode);	
-    	writeDisk(node);
-    	if (parentNode.isFull()) {
-    		splitNode(parentNode);
-    	}
-    	
-    	//node.decreaseKeysAfterSplit();
-        return parentNode;
-    }
 
     /**
      * Gets the degree of the tree
@@ -316,6 +280,11 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         return builder.toString();
     }
     
+    /**
+     * To string without depth
+     * 
+     * @return  String representation of tree
+     */
     public String toStringParseable() {
         StringBuilder  builder = new StringBuilder();
         readDisk(rootGuid).toStringParseable(builder);
@@ -341,7 +310,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
          */
         @SuppressWarnings("unchecked")
         public BTreeNode(long guid, int degree) {
-            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree); //modified to allow for objects to be added before splitting
+            keys = (TreeObject<E>[])Array.newInstance(TreeObject.class, degree); // extra room for splitting
             children = new long[degree + 1];
 
             this.guid = guid;
@@ -403,107 +372,147 @@ public class BTree<E extends Comparable<E>> implements Serializable {
 
         /**
          * inserts the given object into the node
-         * @param object object to insert
-         * @return True if a new key was added, false if not. False could indicate either the node was full or they key already existed
+         * @param object    object to insert
+         * @param tree      Tree reference because Java is actually remarkably dumb
+         * @return          True if a new key was added, false if the key already existed.
          */
-        public boolean insert(TreeObject<E> object) {
-        	if (!isFull()) {
-        		int i = 0;
-                while (i < numKeys && getKey(i).compareTo(object) < 0) {
+        public boolean insert(TreeObject<E> object, BTree<E> tree) {
+        	
+            if (isLeaf()) {
+
+                int i = 0;
+                while (i < this.numKeys && object.compareTo(this.keys[i]) > 0) {
                     i++;
                 }
-                if (i < numKeys && getKey(i).compareTo(object) == 0) {
-                    keys[i].incrementInstances();
+
+                if (i < this.numKeys && object.compareTo(this.keys[i]) == 0) {
+                    this.keys[i].incrementInstances();
+                    writeDisk(this);
                     return false;
                 } else {
-                    for (int j = numKeys; j > i; j--) {
-                        keys[j] = keys[j - 1];
+                    TreeObject<E> tmp = this.keys[i];
+                    this.keys[i] = object;
+                    this.numKeys++;
+                    i++;
+                    while (i < this.numKeys) {
+                        TreeObject<E> tmp2 = this.keys[i];
+                        this.keys[i] = tmp;
+                        tmp = tmp2;
+                        i++;
                     }
-                    keys[i] = object;
-        		    numKeys++;
-        		    writeDisk(this);
-                    return true;
                 }
-        	}
 
-            return false;
-        }
+                writeDisk(this);
 
-        /**
-         * removes the child at the given index
-         * @param index
-         */
-        public void removeChild(int index) {
-        	children[index] = -1;
-        	for(int i = index + 1; i < numChildren; i++) {
-        		children[i - 1] = children[i];
-        	}
-        	numChildren--;
-        }
-        
-        /**
-         * remove the key at the given index
-         * @param index
-         */
-        public void removeKey(int index) {
-        	keys[index] = null;
-        	for(int i = index; i < numKeys - 1; i++) {
-        		keys[i] = keys[i + 1];
-        	}
-        	numKeys--;
-        }
-        
-        /**
-         * Adds a child to the node.
-         * @param nodeId node to add as a child
-         * @return true if successful
-         */
-        public boolean addChild(long nodeId) {
-        	if (numChildren == children.length) {
-        		return false;
-        	}
-        	int i;
-        	BTreeNode node = readDisk(nodeId);
-        	for (i = 0; i < getNumKeys(); i++) {
-        		if(children[i] == -1) {
-    				break;
-    			}else if (node.getNumKeys() != 0) {
-        			if (getKey(i).compareTo(node.getKey(0)) >= 0) {
-	    				break;
-	    			}
-        		}
-    		}
-        	for (int j = numChildren; j > i; j--) {
-                children[j] = children[j - 1];
+                if (numKeys >= degree && parent == -1) { // If root leaf
+                    splitRoot(tree);
+                }
+
+                return true;
+
+            } else {
+
+                int childIndex = -1;
+
+                if (object.compareTo(this.keys[numKeys - 1]) > 0) { // If key is greater than largest key in node
+                    // readDisk(this.children[numChildren - 1]).insert(object);
+                    childIndex = numChildren - 1;
+                } else if (object.compareTo(this.keys[this.numKeys - 1]) == 0) {
+                    this.keys[this.numKeys - 1].incrementInstances();
+                    writeDisk(this);
+                    return false;
+                } else {
+                    int i = this.numKeys - 2;
+                    while (i >= 0 && object.compareTo(this.keys[i]) < 0) {
+                        i--;
+                    }
+
+                    if (i >= 0 && object.compareTo(this.keys[i]) == 0) {
+                        this.keys[i].incrementInstances();
+                        writeDisk(this);
+                        return false;
+                    } else {
+                        // readDisk(this.children[i + 1]).insert(object);
+                        childIndex = i + 1;
+                    }
+                }
+
+                BTreeNode childNode = readDisk(this.children[childIndex]);
+                boolean result = childNode.insert(object, tree);
+                if (childNode.numKeys >= degree) {
+                    splitChild(childIndex, childNode, tree);
+                }
+
+                if (numKeys >= degree && parent == -1) {
+                    splitRoot(tree);
+                }
+
+                return result;
+
             }
-        	children[i] = nodeId;
-        	node.setParent(getGuid());
-        	writeDisk(node);
-        	numChildren++;
-        	return true;
+
         }
-        
+
         /**
-         * sets the parent id
-         * @param parentid id of the parent
+         * Splits a specified child node
+         * 
+         * @param childIndex    Index of target child
+         * @param child         Deserialized child node
+         * @param tree          Tree reference because Java is actually remarkably dumb
          */
-        public void setParent(long parentId) {
-        	parent = parentId;
+        public void splitChild(int childIndex, BTreeNode child, BTree<E> tree) {
+            int medianIndex = child.numKeys / 2; // Right-Hand Median
+            BTreeNode rightChild = readDisk(tree.allocateNode());
+
+            // Move keys over
+            rightChild.numKeys = (child.numKeys - medianIndex) - 1;
+            for (int i = 0; i < rightChild.numKeys; i++) {
+                rightChild.keys[i] = child.keys[i + medianIndex + 1];
+                child.keys[i + medianIndex + 1] = null;
+            }
+            TreeObject<E> medianKey = child.keys[medianIndex];
+            child.keys[medianIndex] = null;
+            child.numKeys = (child.numKeys - rightChild.numKeys) - 1;
+
+            // Move Children over
+            if (!child.isLeaf()) {
+                rightChild.numChildren = child.numChildren - (child.numKeys + 1);
+                for (int i = 0; i < rightChild.numChildren; i++) {
+                    rightChild.children[i] = child.children[i + (child.numKeys + 1)];
+                    child.children[i + (child.numKeys + 1)] = -1;
+                }
+                child.numChildren = child.numChildren - rightChild.numChildren;
+            }
+
+            rightChild.parent = this.guid;
+
+            // Reorganize parent
+            for (int i = this.numKeys; i > childIndex; i--) {
+                this.keys[i] = this.keys[i - 1];
+                this.children[i + 1] = this.children[i];
+            }
+            this.keys[childIndex] = medianKey;
+            this.children[childIndex + 1] = rightChild.guid;
+            this.numKeys++;
+            this.numChildren++;
+
+            writeDisk(child);
+            writeDisk(rightChild);
+            writeDisk(this);
         }
-        
-//        /**
-//         * decreases the number of keys by half for after a split
-//         */
-//        public void decreaseKeysAfterSplit() {
-//        	numKeys = numKeys/2 - 1;
-//        }
-        
+
         /**
-         * checks if the node has a full list of keys
-         * @return true if the key list is full
+         * Splits a node that is root
+         * 
+         * @param tree  Tree reference because Java is actually remarkably dumb
          */
-        public boolean isFull() {
-        	return numKeys == degree;
+        public void splitRoot(BTree<E> tree) {
+            BTreeNode newRoot = readDisk(tree.allocateNode());
+            parent = newRoot.guid;
+            tree.rootGuid = newRoot.guid;
+            newRoot.numChildren = 1;
+            newRoot.children[0] = this.guid;
+            newRoot.splitChild(0, this, tree);
         }
         
         /**
@@ -517,12 +526,27 @@ public class BTree<E extends Comparable<E>> implements Serializable {
         	return false;
         }
 
+        /**
+         * To string method for BTreeNode that prints the elements with some spacing
+         * out to show the depth of a given key
+         * 
+         * Example:
+         *  -  - (0)0 1
+         *  -  - (1)1 1
+         *  - (0)2 1
+         *  -  - (0)3 1
+         *  -  - (1)4 1
+         * 
+         * @param builder   String builder to better construct the final result
+         * @param depth     Depth tracker
+         */
         public void toString(StringBuilder builder, int depth) {
             if (isLeaf()) {
                 for (int i = 0; i < numKeys; i++) {
                     for (int j = 0; j < depth + 1; j++) {
                         builder.append(" - ");
                     }
+                    builder.append(String.format("(%d)", i));
                     builder.append(keys[i].toString());
                     builder.append("\n");
                 }
@@ -532,6 +556,7 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                     for (int j = 0; j < depth + 1; j++) {
                         builder.append(" - ");
                     }
+                    builder.append(String.format("(%d)", i));
                     builder.append(keys[i].toString());
                     builder.append("\n");
                     readDisk(children[i + 1]).toString(builder, depth + 1);
@@ -558,5 +583,101 @@ public class BTree<E extends Comparable<E>> implements Serializable {
                 }
             }    
         } 
+    }
+
+    @Override
+    public Iterator<TreeObject<E>> iterator() {
+        return new BTreeIterator();
+    }
+
+    /**
+     * Iterator for iterating through the contents of the BTree in order
+     */
+    private class BTreeIterator implements Iterator<TreeObject<E>> {
+
+        private Stack<PathStep> currentPath;
+        private BTreeNode currentNode;
+        private int currentNodeIndex;
+
+        /**
+         * Constructs the iterator
+         */
+        public BTreeIterator() {
+            currentPath = new Stack<PathStep>();
+
+            BTreeNode cursor = readDisk(rootGuid);
+            while (!cursor.isLeaf()) {
+                currentPath.add(new PathStep(cursor, 0));
+                cursor = readDisk(cursor.children[0]);
+            }
+
+            currentNode = cursor;
+            currentNodeIndex = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !(currentPath.empty() && currentNodeIndex >= currentNode.numKeys);
+        }
+
+        @Override
+        public TreeObject<E> next() {
+
+            if (!hasNext())
+                throw new RuntimeException("Nothing new");
+
+            TreeObject<E> returnValue;
+
+            if (currentNode.isLeaf()) {
+                returnValue = currentNode.keys[currentNodeIndex];
+                currentNodeIndex++;
+                while (currentNodeIndex >= currentNode.numKeys && currentPath.size() > 0) {
+                    PathStep step = currentPath.pop();
+                    currentNode = step.node;
+                    currentNodeIndex = step.lastVisitedChild;
+                }
+            } else {
+                returnValue = currentNode.keys[currentNodeIndex];
+                currentNodeIndex++;
+                while (!currentNode.isLeaf()) {
+                    currentPath.add(new PathStep(currentNode, currentNodeIndex));
+                    currentNode = readDisk(currentNode.children[currentNodeIndex]);
+                    currentNodeIndex = 0;
+                }
+            }
+
+            return new TreeObject<E>(returnValue);
+        }
+
+        private class PathStep {
+            public BTreeNode node;
+            public int lastVisitedChild;
+
+            public PathStep(BTreeNode node, int lastVisitedChild) {
+                this.node = node;
+                this.lastVisitedChild = lastVisitedChild;
+            }
+        }
+
+    }
+
+    /**
+     * Establishes a database connection to the SQLite file
+     * 
+     * TODO: Adjust to make sure naming is as directed in README
+     * 
+     * @return  Connection to the database
+     */
+    public Connection makeDatabaseConnection() {
+        // See: https://www.sqlitetutorial.net/sqlite-java/create-database/
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(String.format("jdbc:sqlite:%s/btree-sql.sqlite", treeDirectory));
+            if (connection == null)
+                throw new RuntimeException("Failed to create database");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return connection;
     }
 }

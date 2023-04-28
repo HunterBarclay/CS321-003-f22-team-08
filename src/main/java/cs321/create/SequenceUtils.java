@@ -107,7 +107,15 @@ public class SequenceUtils
         return sequence ^ mask; // use xor operator to invert the bits
     }
 
-
+    /**
+     * Returns the complement DNA sequence
+     * 
+     * @param originalSequence Original sequence
+     * @return Complement sequence
+     */
+    public static String getComplement(String originalSequence) {
+        return longToDnaString(getComplement(dnaStringToLong(originalSequence), originalSequence.length()), originalSequence.length());
+    }
 
     /**
      * The driver for demonstrating the usage of the methods in the class.

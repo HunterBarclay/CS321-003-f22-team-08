@@ -21,7 +21,9 @@ public class GeneBankSearchDatabaseTest {
 
     private static boolean setupComplete = false;
     public String btreeTest1Location = System.getProperty("java.io.tmpdir") + "/btree-database-search-test-1";
+    public String btreeTest1DBLocation = System.getProperty("java.io.tmpdir") + "/btree-database-search-test-1.db";
     public String btreeTest2Location = System.getProperty("java.io.tmpdir") + "/btree-database-search-test-2";
+    public String btreeTest2DBLocation = System.getProperty("java.io.tmpdir") + "/btree-database-search-test-2.db";
 
     /**
      * Initialize some trees to use for testing in this test file
@@ -54,7 +56,7 @@ public class GeneBankSearchDatabaseTest {
                         }
                     }
                     System.out.println("Writing to database...");
-                    GeneBankCreateBTree.writeToDatabase(test1, test1.makeDatabaseConnection(), 4);
+                    GeneBankCreateBTree.writeToDatabase(test1, BTree.makeDatabaseConnection(btreeTest1DBLocation), 4);
                     // System.out.println(test1.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -73,7 +75,7 @@ public class GeneBankSearchDatabaseTest {
                     for (String s : gbParser) {
                         test2.insert(SequenceUtils.dnaStringToLong(s));
                     }
-                    GeneBankCreateBTree.writeToDatabase(test2, test2.makeDatabaseConnection(), 1);
+                    GeneBankCreateBTree.writeToDatabase(test2, BTree.makeDatabaseConnection(btreeTest2DBLocation), 1);
                     // System.out.println(test2.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -90,12 +92,25 @@ public class GeneBankSearchDatabaseTest {
     }
 
     @Test
+    public void btreeSearchDatabaseParseArgumentsTest() {
+        try {
+            String[] args = new String[] { "--queryfile=results/query-results/query1", String.format("--database=%s", btreeTest1DBLocation) };
+            GeneBankSearchDatabaseArguments arguments = new GeneBankSearchDatabaseArguments(args);
+            GeneBankSearchDatabaseArguments expectedArguments = new GeneBankSearchDatabaseArguments("results/query-results/query1", btreeTest1DBLocation);
+            assertEquals(expectedArguments, arguments);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Encountered Exception");
+        }
+    }
+
+    @Test
     public void btreeDatabaseSearchForNonExistent() {
         try {
-            BTree<Long> tree = BTree.<Long>loadBTree(btreeTest2Location);
-            Connection connection = tree.makeDatabaseConnection();
+            Connection connection = BTree.makeDatabaseConnection(btreeTest2DBLocation);
             int instances = GeneBankSearchDatabase.queryDatabase(connection, "N");
             assertEquals(0, instances);
+            connection.close();
         } catch (Exception e) {
             e.printStackTrace();
             fail("Encountered exception: " + e.getMessage());
@@ -112,12 +127,12 @@ public class GeneBankSearchDatabaseTest {
     @Test
     public void btreeDatabaseSearchForDuplicates() {
         try {
-            BTree<Long> tree = BTree.<Long>loadBTree(btreeTest2Location);
-            Connection connection = tree.makeDatabaseConnection();
+            Connection connection = BTree.makeDatabaseConnection(btreeTest2DBLocation);
             assertEquals(1543, GeneBankSearchDatabase.queryDatabase(connection, "a"));
             assertEquals(1115, GeneBankSearchDatabase.queryDatabase(connection, "c"));
             assertEquals(866, GeneBankSearchDatabase.queryDatabase(connection, "g"));
             assertEquals(1638, GeneBankSearchDatabase.queryDatabase(connection, "t"));
+            connection.close();
         } catch (Exception e) {
             e.printStackTrace();
             fail("Encountered exception: " + e.getMessage());
@@ -127,8 +142,7 @@ public class GeneBankSearchDatabaseTest {
     @Test
     public void btreeDatabaseSearch_Test0_Degree35_Length4_FullScaleTest() {
         try {
-            BTree<Long> tree = BTree.<Long>loadBTree(btreeTest1Location);
-            Connection connection = tree.makeDatabaseConnection();
+            Connection connection = BTree.makeDatabaseConnection(btreeTest1DBLocation);
             QueryResultsParser queries = new QueryResultsParser("results/query-results/query4-test0.gbk.out");
             for (QueryResult result : queries) {
                 assertEquals(
@@ -137,6 +151,7 @@ public class GeneBankSearchDatabaseTest {
                         + GeneBankSearchDatabase.queryDatabase(connection, result.getQuery())
                 );
             }
+            connection.close();
         } catch (Exception e) {
             e.printStackTrace();
             fail("Encountered exception");

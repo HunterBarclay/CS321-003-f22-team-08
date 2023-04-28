@@ -50,7 +50,7 @@ public class GeneBankCreateBTreeTest {
         
         Connection connection = null;
         try {
-            connection = tree.makeDatabaseConnection();
+            connection = BTree.makeDatabaseConnection(System.getProperty("java.io.tmpdir") + "/database-test.db");
             GeneBankCreateBTree.writeToDatabase(tree, connection, 3);
             GeneBankCreateBTree.printDatabase(connection);
         } catch (Exception e) {

@@ -814,13 +814,14 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
      * 
      * TODO: Adjust to make sure naming is as directed in README
      * 
-     * @return  Connection to the database
+     * @param databasePath  Path to database. Will create a new one if necessary
+     * @return              Connection to the database
      */
-    public Connection makeDatabaseConnection() {
+    public static Connection makeDatabaseConnection(String databasePath) {
         // See: https://www.sqlitetutorial.net/sqlite-java/create-database/
         Connection connection = null;
         try {
-            connection = DriverManager.getConnection(String.format("jdbc:sqlite:%s/btree-sql.sqlite", treeDirectory));
+            connection = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databasePath));
             if (connection == null)
                 throw new RuntimeException("Failed to create database");
         } catch (Exception e) {

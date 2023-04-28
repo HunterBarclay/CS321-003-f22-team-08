@@ -29,7 +29,7 @@ public class QueryParser implements Iterable<String>, Iterator<String> {
 
     @Override
     public String next() {
-        return scanner.nextLine();
+        return scanner.nextLine().toLowerCase();
     }
 
     @Override

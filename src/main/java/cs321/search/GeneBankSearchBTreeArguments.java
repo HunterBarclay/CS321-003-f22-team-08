@@ -97,7 +97,7 @@ public class GeneBankSearchBTreeArguments
     }
 
     public int getCacheSize() {
-        return this.getCacheSize();
+        return this.cacheSize;
     }
 
     public boolean getUseCache() {

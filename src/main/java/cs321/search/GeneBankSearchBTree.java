@@ -1,7 +1,6 @@
 package cs321.search;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.Scanner;
 
 import cs321.btree.BTree;
@@ -29,13 +28,6 @@ public class GeneBankSearchBTree
             int index = gbankString.lastIndexOf('.');
             gbankString = gbankString.substring(0, index);
         }
-        String dumpFileName = "";
-        dumpFileName += geneBankSearchBTreeArguments.getQueryFileName();
-        dumpFileName += "-";
-        dumpFileName += gbankString;
-        dumpFileName += ".out";
-
-        PrintWriter pw = new PrintWriter(dumpFileName);
 
         Cache cache = loadedTree.new Cache(geneBankSearchBTreeArguments.getCacheSize());
             
@@ -67,13 +59,12 @@ public class GeneBankSearchBTree
             numInstances = treeObj.getInstances();
             numInstances += treeObj2.getInstances();
             
-            pw.println(subsequenceQueryString + " " + numInstances);
+            System.out.println(subsequenceQueryString + " " + numInstances);
 
             lineScan.close();
 
         }
         fileScan.close();
-        pw.close();
 
     }
 

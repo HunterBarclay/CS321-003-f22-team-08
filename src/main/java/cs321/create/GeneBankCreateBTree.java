@@ -33,20 +33,8 @@ public class GeneBankCreateBTree {
         BTree<Long> tree = new BTree<Long>(BTreeFileName, gbkArgs.getDegree() == 0 ? DEFAULT_DEGREE : gbkArgs.getDegree());
         GeneBankParser parser = new GeneBankParser(gbkArgs.getSubsequenceLength(), gbkArgs.getGbkFileName());
         System.err.println("Generating Tree! This may take a moment...");
-        long counter = 0;
-        long lastUpdate = System.currentTimeMillis();
-        long lastCounter = 0;
-        long updateWait = 1000;
-        String sequence;
         while(parser.hasNext()) {
-            sequence = parser.next();
-        	tree.insert(SequenceUtils.dnaStringToLong(sequence));
-            counter++;
-            if (System.currentTimeMillis() > lastUpdate + updateWait) {
-                System.err.println(String.format("[%d] %s @ %d insertions per second", counter, sequence, (counter - lastCounter) / 2));
-                lastUpdate = System.currentTimeMillis();
-                lastCounter = counter;
-            }
+        	tree.insert(SequenceUtils.dnaStringToLong(parser.next()));
         }
         parser.finalize();
         System.err.println("Tree Created at " + BTreeFileName + "!");

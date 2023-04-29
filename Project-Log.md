@@ -20,5 +20,5 @@
 - Closes #19 dcca0c056eba13f2e0cdd687ad01ba39623e1257 (Hunter)
 - Closes #24 b1a1ae2088f54dd28b4463c198109b890fa73a38 (Hunter)
 ### Sprint 4 (April 17th, Monday 2023 - April 21st, Friday 2023)
--Implements #8 90bb1eb672e357f70f951d69af610a9a67f771dc (Joshua)
+- Implements #8 90bb1eb672e357f70f951d69af610a9a67f771dc (Joshua)
 ### Sprint 5 (April 24th, Monday 2023 - April 28th, Friday 2023)

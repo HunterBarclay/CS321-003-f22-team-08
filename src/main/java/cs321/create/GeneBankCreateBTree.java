@@ -43,7 +43,7 @@ public class GeneBankCreateBTree {
         	tree.insert(SequenceUtils.dnaStringToLong(sequence));
             counter++;
             if (System.currentTimeMillis() > lastUpdate + updateWait) {
-                System.err.println(String.format("[%d] %s @ %d insertions per second", counter, sequence, (counter - lastCounter) / 2));
+                System.err.println(String.format("[%d] %s @ %d insertions per second", counter, sequence, (counter - lastCounter) / 1));
                 lastUpdate = System.currentTimeMillis();
                 lastCounter = counter;
             }

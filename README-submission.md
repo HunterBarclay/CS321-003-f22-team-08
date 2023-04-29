@@ -18,9 +18,15 @@ All of them
 # Cache Performance Results
 For the test data `test5.gbk`, how much did a Cache of size 100 improve your performance compared to no cache.
 
+It speed it up by more than a factor of 2.
+
 For the test data `test5.gbk`, how much did a Cache of size 500 improve your performance compared to no cache? 
 
+A tiny bit slower than a 100 size cache.
+
 For the test data `test5.gbk`, how much did a Cache of size 5000 improve your performance compared to no cache?
+
+I actually just stopped this one, because it was over 2 minutes and that was considerably slower than with no cache. I suspect the added looping through thousands of elements each retrieval of a node hindered quite a bit.
 
 
 # AWS Notes
@@ -40,5 +46,5 @@ I thought that this project was overall a lot to handle. It was my first time re
 I think that this project was kind of fun in a way. I have always enjoyed working with large datasets and complex algorithms so it was great that we were able to do this in this project. Unlike other data structures, Btrees have to utilize the disk due to the massive data sizes it works with. I really liked that we used a real world scenario of geneBank files, espicially since my Sister is a biology major so it was an interesting connection. Working with a team in CS and fully untilizing github was a bit new so it was interesting to do. Since teams are often required in the real world, it is good to gain programming experience from such a realistic scenario. As for the code, the main hurdle I had to get through was making insert working, where it found many ways to delete, duplicate, and overall mess up existing keys during a split. Fortunately it was finally finished, though i was upset that it did not make it to the final version.
 
 # Additional Notes
-TBD
+We went with a "one node per file" approach to adjust for a generic storage type.
 

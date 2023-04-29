@@ -7,6 +7,7 @@ import cs321.common.GeneBankParser;
 
 import java.util.Scanner;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -52,6 +53,9 @@ public class GeneBankCreateBTree {
         }
 
         // Write to database here
+        if (!Paths.get("databases/").toFile().exists())
+            Files.createDirectory(Paths.get("databases/"));
+            
         System.err.println("Writing to SQLite database...");
         String databaseLocation = String.format("databases/%s.%d.db", Paths.get(gbkArgs.getGbkFileName()).getFileName(), gbkArgs.getSubsequenceLength());
         Connection databaseConnection = BTree.makeDatabaseConnection(databaseLocation);

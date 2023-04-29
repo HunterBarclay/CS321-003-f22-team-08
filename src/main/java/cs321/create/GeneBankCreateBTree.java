@@ -50,6 +50,13 @@ public class GeneBankCreateBTree {
         	write.close();
         	System.err.println("Tree dumped to file './dump'");
         }
+
+        // Write to database here
+        System.err.println("Writing to SQLite database...");
+        String databaseLocation = String.format("databases/%s.%d.db", Paths.get(gbkArgs.getGbkFileName()).getFileName(), gbkArgs.getSubsequenceLength());
+        Connection databaseConnection = BTree.makeDatabaseConnection(databaseLocation);
+        writeToDatabase(tree, databaseConnection, gbkArgs.getSubsequenceLength());
+        System.err.println(String.format("Wrote to database at '%s'", databaseLocation));
         
         System.err.println("Have a great day! The great power of this tree brings great responsibility...");
     }

@@ -7,6 +7,7 @@ import cs321.common.GeneBankParser;
 
 import java.util.Scanner;
 import java.io.*;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +17,7 @@ import java.util.Iterator;
 public class GeneBankCreateBTree {
 
     private final static String LINE_SEPARATOR = "==============================";
+    private final static int DEFAULT_DEGREE = 204;
     
     private static GeneBankCreateBTreeArguments geneBankCreateBTreeArguments = null;
 
@@ -23,12 +25,12 @@ public class GeneBankCreateBTree {
     {
         System.err.println("Hello world from GeneBank Create BTree!");
         GeneBankCreateBTreeArguments gbkArgs = parseArgumentsAndHandleExceptions(args);
-        String BTreeFileName = gbkArgs.getGbkFileName() + ".btree.data." + 
+        String BTreeFileName = Paths.get(gbkArgs.getGbkFileName()).getFileName() + ".btree.data." + 
 						gbkArgs.getSubsequenceLength() + "." +
 						gbkArgs.getDegree();
         System.err.println("Args parsed!");
         //TODO add cache functionality here
-        BTree<Long> tree = new BTree<Long>(BTreeFileName,gbkArgs.getDegree());
+        BTree<Long> tree = new BTree<Long>(BTreeFileName, gbkArgs.getDegree() == 0 ? DEFAULT_DEGREE : gbkArgs.getDegree());
         GeneBankParser parser = new GeneBankParser(gbkArgs.getSubsequenceLength(), gbkArgs.getGbkFileName());
         System.err.println("Generating Tree! This may take a moment...");
         while(parser.hasNext()) {
@@ -37,7 +39,8 @@ public class GeneBankCreateBTree {
         parser.finalize();
         System.err.println("Tree Created at " + BTreeFileName + "!");
         if(gbkArgs.getDebugLevel() == 1) {
-        	File dumpFile = new File(gbkArgs.getGbkFileName() +".dump." +gbkArgs.getSubsequenceLength());
+        	// File dumpFile = new File(gbkArgs.getGbkFileName() +".dump." +gbkArgs.getSubsequenceLength());
+            File dumpFile = new File("dump"); // tests script require the dump to be at ./dump
         	PrintWriter write = new PrintWriter(dumpFile);
         	Scanner scan = new Scanner(tree.toStringParseable());
         	while(scan.hasNextLine()) {
@@ -45,7 +48,7 @@ public class GeneBankCreateBTree {
         		scan.nextLine();
         	}
         	write.close();
-        	System.err.println("Tree dumped to file " + gbkArgs.getGbkFileName() +".dump." + gbkArgs.getSubsequenceLength());
+        	System.err.println("Tree dumped to file './dump'");
         }
         
         System.err.println("Have a great day! The great power of this tree brings great responsibility...");
@@ -188,7 +191,7 @@ public class GeneBankCreateBTree {
 	    		useCacheSet = true;
 	    	}else if(args[i].length() > 9 && args[i].substring(0,9).equals("--degree=")) {
 	    		if(args[i].substring(9).equals("0")) {
-	    			degree = 204;
+	    			degree = 0;
 	    		}else {
 	    			try {
 						degree = Integer.parseInt(args[i].substring(9));
@@ -219,7 +222,7 @@ public class GeneBankCreateBTree {
 				}
 	    	}else if(args[i].length() > 12 && args[i].substring(0,12).equals("--cachesize=")) {
 	    		try {
-					length = Integer.parseInt(args[i].substring(12));
+					cacheSize = Integer.parseInt(args[i].substring(12));
 					if(cacheSize < 0) {
 			    		throw new ParseArgumentException("--cachesize expects a positive integer value. You entered: " + args[i].substring(12));
 					}

@@ -13,8 +13,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.Stack;
+import java.util.LinkedList;
 
 /**
  * BTree creates a BTree data structure and store it in a given directory.
@@ -131,12 +133,74 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
     }
 
     /**
-     * Searchs and returns found TreeObject given key
-     * @param element Key to find
-     * @return TreeObject at given key
+     * Searches the BTree for a matching key and returns the TreeObject 
+     * that contains that given key if found
+     * @param key Key to find
+     * @return TreeObject containing key
      */
     public TreeObject<E> search(E key) {
-        throw new RuntimeException();
+        return search(readDisk(rootGuid), key);
+    }
+
+     /**
+     * Searches the BTree for a matching key and returns the TreeObject 
+     * that contains that given key if found
+     * @param key Key to find
+     * @return TreeObject containing key
+     */
+    public TreeObject<E> search(E key, Cache cache) {
+        return search(readDisk(rootGuid), key, cache);
+    }
+
+    /**
+     * Public helper method that searches and returns found TreeObject 
+     * given a node and a key
+     * @param node the node to be searched in
+     * @param key Key to find
+     * @return TreeObject at given key
+     */
+    public TreeObject<E> search(BTreeNode node, E key) {
+        int i = 0;
+        while (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) > 0) {
+            i++;
+        }
+        if (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) == 0) {
+            TreeObject<E> copyTreeObject = new TreeObject<E>(key);
+            copyTreeObject.setInstances(node.getKey(i).getInstances());
+            return copyTreeObject;
+        }
+        else if (node.numChildren == 0) {
+            return null;
+        }
+        else {
+            return search(readDisk(node.children[i]), key);
+        }
+    }
+
+    /**
+     * Private helper method that searches and returns found TreeObject 
+     * given a node and a key
+     * @param node the node to be searched in
+     * @param key Key to find
+     * @return TreeObject at given key
+     */
+    public TreeObject<E> search(BTreeNode node, E key, Cache cache) {
+        int i = 0;
+        while (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) > 0) {
+            i++;
+        }
+        if (i < node.getNumKeys() && key.compareTo(node.getKey(i).getKey()) == 0) {
+            TreeObject<E> copyTreeObject = new TreeObject<E>(key);
+            copyTreeObject.setInstances(node.getKey(i).getInstances());
+            return copyTreeObject;
+        }
+        else if (node.numChildren == 0) {
+            return null;
+        }
+        else {
+            BTreeNode node2 = cache.getObject(node.children[i]);
+            return search(node2, key, cache);
+        }
     }
 
     /**
@@ -583,6 +647,90 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
                 }
             }    
         } 
+        
+    }
+
+    /**
+     * This is a class that creates a Cache object that uses a linked
+     * list for its data structure. Its intended to speed up the B-tree
+     */
+    public class Cache {
+        private int maxCacheSize;
+        LinkedList<BTreeNode> cache;
+        private int numCacheHits;
+        private int numCacheReferences;
+        private int size;
+        private final DecimalFormat df = new DecimalFormat("0.00");
+        
+        /**
+         * Constructor that creates a Cache Object which creates a
+         * Linked List of a general object type.
+         * @param cacheSize The size of available cache
+         */
+        public Cache(int cacheSize) {
+            cache = new LinkedList<BTreeNode>();
+            maxCacheSize = cacheSize;
+            numCacheReferences = 0;
+            numCacheHits = 0;
+        }
+
+        /**
+         * Searches the Cache to see if the desired object is in the
+         * cache. If it's not, it will add it to the front of the cache.
+         * @return Desired object
+         */
+        public BTreeNode getObject(long nodeGuid) {
+            numCacheReferences++;
+            BTreeNode nodeToGet;
+            for (int i = 0; i < cache.size(); i++) {
+                nodeToGet = cache.get(i);
+                if (nodeToGet.getGuid() == nodeGuid) {
+                    cache.remove(i);
+                    numCacheHits++;
+                    this.addObject(nodeToGet);
+                    return nodeToGet;
+                } 
+            }
+            nodeToGet = readDisk(nodeGuid);
+            this.addObject(nodeToGet);
+            return nodeToGet;
+        }
+        /**
+         * Private helper method used in getObject() method in order
+         * to add objects to the cache.
+         * @param element Element desired to have added to the cache.
+         */
+        private void addObject(BTreeNode element) {
+            if(cache.size() == maxCacheSize) {
+                cache.removeLast();
+            }
+            cache.addFirst(element);
+        }
+        
+        /**
+         * Private helper method for the getObject() method for removing
+         * an element, especially when the cache gets too big.
+         */
+        private void removeObject(BTreeNode element) {
+            cache.remove(element);
+        }
+        
+        /**
+         * Clears the cache.
+         */
+        public void clearCache() {
+            cache.clear();
+        }
+        
+        @Override
+        public String toString() {
+            Double percentHit = ((double)numCacheHits / (double)numCacheReferences) * 100;
+            String returnString = "Total number of references:        " + numCacheReferences;
+            returnString+= "\nTotal number of cache hits:        " + numCacheHits;
+            returnString+= "\nCache hit ratio:                   " + df.format(percentHit) + "%\n";
+            return returnString;
+        }
+
     }
 
     @Override
@@ -680,4 +828,5 @@ public class BTree<E extends Comparable<E>> implements Serializable, Iterable<Tr
         }
         return connection;
     }
+
 }
